@@ -33,6 +33,8 @@ winutil.exe.config
 Microsoft.UI.Xaml*
 license1.xml
 winutil.ps1
+RAM-Tech-Utility.exe
+*.exe
 
 # Libraries
 System.Management.Automation.dll
@@ -51,6 +53,8 @@ test.ps1
 .github/site/
 
 binary/
+
+logs/
 
 .preprocessor_hashes.json
 
