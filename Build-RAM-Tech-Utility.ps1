@@ -6,9 +6,17 @@ $icon = Join-Path $root "logo.ico"
 $out = Join-Path $root "RAM-Tech-Utility.exe"
 $payload = Join-Path $root "winutil.ps1"
 
-if (-not (Test-Path $ps1)) { throw "Missing Build-Exe-Entry.ps1" }
-if (-not (Test-Path $icon)) { throw "Missing logo.ico" }
-if (-not (Test-Path $payload)) { throw "Missing winutil.ps1" }
+if (-not (Test-Path $ps1)) {
+    throw "Missing Build-Exe-Entry.ps1"
+}
+
+if (-not (Test-Path $icon)) {
+    throw "Missing logo.ico"
+}
+
+if (-not (Test-Path $payload)) {
+    throw "Missing winutil.ps1. Run the normal launcher once first so winutil.ps1 is generated."
+}
 
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
@@ -20,14 +28,14 @@ if (-not $ps2exeModule) {
     throw "ps2exe module not found. Run: Install-Module ps2exe -Scope CurrentUser -Force"
 }
 
-Import-Module $ps2exeModule.FullName
+Import-Module $ps2exeModule.FullName -Force
 
 Invoke-PS2EXE `
-  -inputFile $ps1 `
-  -outputFile $out `
-  -iconFile $icon `
-  -noConsole `
-  -embedFiles @{
-    "$env:LOCALAPPDATA\RAM-Tech-Utility\winutil.ps1" = $payload
-  } `
-  -verbose
+    -inputFile $ps1 `
+    -outputFile $out `
+    -iconFile $icon `
+    -noConsole `
+    -embedFiles @{
+        "$env:LOCALAPPDATA\RAM-Tech-Utility\winutil.ps1" = $payload
+    } `
+    -verbose
