@@ -18,7 +18,6 @@ if ($Config) {
 }
 
 $PARAM_RUN = $false
-# Handle the -Run switch
 if ($Run) {
     $PARAM_RUN = $true
 }
@@ -33,7 +32,6 @@ if ($Offline) {
     $PARAM_OFFLINE = $true
 }
 
-
 if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Output "RAM Tech Utility needs to be run as Administrator. Attempting to relaunch."
     $argList = @()
@@ -42,27 +40,30 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
         $argList += if ($_.Value -is [switch] -and $_.Value) {
             "-$($_.Key)"
         } elseif ($_.Value -is [array]) {
-            "-$($_.Key) $($_.Value -join ',')"
+            "-$($_.Key) `"$($_.Value -join ',')`""
         } elseif ($_.Value) {
-            "-$($_.Key) '$($_.Value)'"
+            "-$($_.Key) `"$($_.Value)`""
         }
     }
 
-    $script = if ($PSCommandPath) {
-        "& { & `'$($PSCommandPath)`' $($argList -join ' ') }"
+    $selfPath = if ($PSCommandPath) {
+        $PSCommandPath
+    } elseif ($MyInvocation.MyCommand.Path) {
+        $MyInvocation.MyCommand.Path
     } else {
+        throw "Could not determine the launcher script path for elevation."
     }
 
     $powershellCmd = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "pwsh" } else { "powershell" }
-    $processCmd = if (Get-Command wt.exe -ErrorAction SilentlyContinue) { "wt.exe" } else { "$powershellCmd" }
+    $processCmd = if (Get-Command wt.exe -ErrorAction SilentlyContinue) { "wt.exe" } else { $powershellCmd }
 
     if ($processCmd -eq "wt.exe") {
-        Start-Process $processCmd -ArgumentList "$powershellCmd -ExecutionPolicy Bypass -NoProfile -Command `"$script`"" -Verb RunAs
+        Start-Process $processCmd -ArgumentList "$powershellCmd -ExecutionPolicy Bypass -NoProfile -File `"$selfPath`" $($argList -join ' ')" -Verb RunAs
     } else {
-        Start-Process $processCmd -ArgumentList "-ExecutionPolicy Bypass -NoProfile -Command `"$script`"" -Verb RunAs
+        Start-Process $processCmd -ArgumentList "-ExecutionPolicy Bypass -NoProfile -File `"$selfPath`" $($argList -join ' ')" -Verb RunAs
     }
 
-    break
+    exit
 }
 
 # Load DLLs
@@ -96,14 +97,17 @@ New-Item $logdir -ItemType Directory -Force | Out-Null
 
 $sourceLogoPng = Join-Path $PSScriptRoot 'logo.png'
 $sourceLogoIco = Join-Path $PSScriptRoot 'logo.ico'
+
 if (Test-Path $sourceLogoPng) {
     Copy-Item $sourceLogoPng (Join-Path $winutildir 'logo.png') -Force
 }
+
 if (Test-Path $sourceLogoIco) {
     Copy-Item $sourceLogoIco (Join-Path $winutildir 'logo.ico') -Force
 }
+
 Start-Transcript -Path "$logdir\ram-tech-utility_$dateTime.log" -Append -NoClobber | Out-Null
 
 # Set PowerShell window title
 $Host.UI.RawUI.WindowTitle = "RAM Tech Utility (Admin)"
-clear-host
+Clear-Host
