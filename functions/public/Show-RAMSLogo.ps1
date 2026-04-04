@@ -1,15 +1,17 @@
-Function Show-RAMSLogo {
-    Write-Host @"
-==================================================
-RRRRRRR   AAAAAAA   MM   MM
-RR    RR  AA   AA   MMM MMM
-RRRRRRR   AAAAAAA   MM M MM   Tech Utility
-RR   RR   AA   AA   MM   MM
-RR    RR  AA   AA   MM   MM
+function Show-RAMSLogo {
+    $banner = @"
+======================================================
+RRRRRR   AAAAAA   MM   MM  ''   SSSSS    
+R     R  A    A   MMM MMM   '  SS
+RRRRRR   AAAAAA   MM M MM      SSSSS      Tech Utility
+R   RR   A    A   MM   MM         SS
+R    RR  A    A   MM   MM    SSSSS
 
 RAM'S COMPUTER REPAIR
 Phone: (956) 244-5094
 Website: www.ramscomputerrepair.net
-==================================================
-"@ -ForegroundColor Cyan
+=======================================================
+"@
+
+    Write-Host $banner -ForegroundColor Cyan
 }
