@@ -1,11 +1,9 @@
-Add-Type -AssemblyName PresentationFramework
-
 $ErrorActionPreference = "Stop"
 
 try {
-    $appRoot = Split-Path -Parent $MyInvocation.MyCommand.Definition
+    $appRoot = [System.AppDomain]::CurrentDomain.BaseDirectory
     if (-not $appRoot) {
-        $appRoot = [System.AppDomain]::CurrentDomain.BaseDirectory
+        throw "Could not resolve application base directory."
     }
 
     Set-Location $appRoot
@@ -15,13 +13,18 @@ try {
         throw "Could not find main script: $mainScript"
     }
 
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $mainScript
+    Start-Process powershell.exe -Verb RunAs -WorkingDirectory $appRoot -ArgumentList @(
+        '-NoProfile',
+        '-ExecutionPolicy', 'Bypass',
+        '-File', "`"$mainScript`""
+    )
 }
 catch {
-    [System.Windows.MessageBox]::Show(
+    Add-Type -AssemblyName System.Windows.Forms
+    [System.Windows.Forms.MessageBox]::Show(
         $_.Exception.Message,
         "RAM Tech Utility",
-        "OK",
-        "Error"
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Error
     ) | Out-Null
 }
