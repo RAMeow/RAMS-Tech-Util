@@ -1,22 +1,50 @@
 # RAM Tech Utility
 
-RAM Tech Utility is a local Windows utility toolkit package prepared for RAM Tech Utility customization and future module integration.
+RAM Tech Utility is a customized Windows utility toolkit based on the WinUtil foundation, adapted for RAM’S COMPUTER REPAIR workflows, branding, and tooling.
 
-## Launch
+## What this repo contains
 
-Use one of the included launchers:
+This repository contains the **source files** for RAM Tech Utility, including:
 
-- `Start-RAM-Tech-Utility.bat`
-- `Start-RAM-Tech-Utility.ps1`
+- PowerShell launcher scripts
+- compile/build scripts
+- XAML UI files
+- configuration files
+- functions and helper modules
+- branding assets
 
-## Included in this pass
+This repo is meant to track **source**, not generated output.
 
-- RAM Tech Utility branding in the main launcher flow
-- cleaned About, Credits, and Project Files menu behavior
-- local project folder access from the UI
+---
 
-## Next steps
+## Main launch files
 
-- continue replacing remaining visible labels
-- add RAM-specific modules
-- polish layout and scaling
+### `Start-RAM-Tech-Utility.bat`
+Simple Windows launcher for normal use.
+
+### `Start-RAM-Tech-Utility.ps1`
+PowerShell launcher that starts the utility with elevation handling.
+
+### `Compile.ps1`
+Builds the generated runtime file used by the tool.
+
+### `Build-Exe-Entry.ps1`
+Entry script used to create the EXE launcher build.
+
+### `Build-RAM-Tech-Utility.ps1`
+Main EXE build script.
+
+### `Build-RAM-Tech-Utility.cmd`
+Double-click wrapper that runs the PowerShell EXE build script.
+
+---
+
+## Normal source launch
+
+To run the tool from source:
+
+1. Open the repo folder
+2. Run:
+
+```powershell
+.\Start-RAM-Tech-Utility.ps1
