@@ -1,5 +1,5 @@
 function Show-RAMSLogo {
-    $banner = @"
+    Write-Host @"
 ======================================================
 RRRRRR   AAAAAA   MM   MM  ''   SSSSS    
 R     R  A    A   MMM MMM   '  SS
@@ -11,7 +11,5 @@ RAM'S COMPUTER REPAIR
 Phone: (956) 244-5094
 Website: www.ramscomputerrepair.net
 =======================================================
-"@
-
-    Write-Host $banner -ForegroundColor Cyan
+"@ -ForegroundColor Cyan
 }
