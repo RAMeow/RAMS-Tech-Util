@@ -1,7 +1,6 @@
 <#
 .NOTES
     Author         : RAM Tech Utility
-    Runspace Author: @DeveloperDurp
     Project        : RAM Tech Utility
     Version        : #{replaceme}
 #>
