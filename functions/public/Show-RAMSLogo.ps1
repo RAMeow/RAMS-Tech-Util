@@ -1,11 +1,11 @@
 Function Show-RAMSLogo {
     Write-Host @"
 ==================================================
-RRRRR    AAAAA   M   M
-R    R   A   A   MM MM
-RRRRR    AAAAA   M M M   Tech Utility
-R   R    A   A   M   M
-R    R   A   A   M   M
+RRRRRRR   AAAAAAA   MM   MM
+RR    RR  AA   AA   MMM MMM
+RRRRRRR   AAAAAAA   MM M MM   Tech Utility
+RR   RR   AA   AA   MM   MM
+RR    RR  AA   AA   MM   MM
 
 RAM'S COMPUTER REPAIR
 Phone: (956) 244-5094
