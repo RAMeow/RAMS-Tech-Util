@@ -1,0 +1,8 @@
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+Import-Module ps2exe
+Get-Command Invoke-PS2EXE
+
+
+
+
+Invoke-PS2EXE -inputFile "C:\Users\RAM\Desktop\RAMS-Tech-Util-main\Build-Exe-Entry.ps1" -outputFile "C:\Users\RAM\Desktop\RAMS-Tech-Util-main\RAM-Tech-Utility.exe" -iconFile "C:\Users\RAM\Desktop\RAMS-Tech-Util-main\logo.ico" -requireAdmin -noConsole -verbose
