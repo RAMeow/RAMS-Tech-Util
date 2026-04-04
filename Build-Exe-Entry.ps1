@@ -3,38 +3,28 @@ $ErrorActionPreference = "Stop"
 function Test-IsAdmin {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = New-Object Security.Principal.WindowsPrincipal($identity)
-    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-}
-
-function Get-AppRoot {
-    $baseDir = [System.AppDomain]::CurrentDomain.BaseDirectory
-    if (-not [string]::IsNullOrWhiteSpace($baseDir)) {
-        return $baseDir.TrimEnd('\')
-    }
-
-    throw "Could not resolve application folder."
+    $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
 function Get-SelfPath {
-    return [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
+    [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
 }
 
 try {
-    $root = Get-AppRoot
-    Set-Location $root
+    $payloadRoot = Join-Path $env:LOCALAPPDATA "RAM-Tech-Utility"
+    $mainScript = Join-Path $payloadRoot "winutil.ps1"
 
-    $mainScript = Join-Path $root "winutil.ps1"
     if (-not (Test-Path $mainScript)) {
-        throw "Embedded winutil.ps1 was not extracted."
+        throw "Embedded payload was not extracted: $mainScript"
     }
 
     if (-not (Test-IsAdmin)) {
         $selfPath = Get-SelfPath
-        Start-Process -FilePath $selfPath -Verb RunAs -WorkingDirectory $root
+        Start-Process -FilePath $selfPath -Verb RunAs
         exit
     }
 
-    Start-Process -FilePath "powershell.exe" -WorkingDirectory $root -ArgumentList @(
+    Start-Process -FilePath "powershell.exe" -WorkingDirectory $payloadRoot -ArgumentList @(
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
         "-File", "`"$mainScript`""
