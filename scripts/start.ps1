@@ -96,13 +96,25 @@ New-Item $logdir -ItemType Directory -Force | Out-Null
 
 $sourceLogoPng = Join-Path $PSScriptRoot 'logo.png'
 $sourceLogoIco = Join-Path $PSScriptRoot 'logo.ico'
+$destLogoPng = Join-Path $winutildir 'logo.png'
+$destLogoIco = Join-Path $winutildir 'logo.ico'
 
 if (Test-Path $sourceLogoPng) {
-    Copy-Item $sourceLogoPng (Join-Path $winutildir 'logo.png') -Force
+    $sourceLogoPngResolved = [System.IO.Path]::GetFullPath($sourceLogoPng)
+    $destLogoPngResolved = [System.IO.Path]::GetFullPath($destLogoPng)
+
+    if ($sourceLogoPngResolved -ne $destLogoPngResolved) {
+        Copy-Item $sourceLogoPngResolved $destLogoPngResolved -Force
+    }
 }
 
 if (Test-Path $sourceLogoIco) {
-    Copy-Item $sourceLogoIco (Join-Path $winutildir 'logo.ico') -Force
+    $sourceLogoIcoResolved = [System.IO.Path]::GetFullPath($sourceLogoIco)
+    $destLogoIcoResolved = [System.IO.Path]::GetFullPath($destLogoIco)
+
+    if ($sourceLogoIcoResolved -ne $destLogoIcoResolved) {
+        Copy-Item $sourceLogoIcoResolved $destLogoIcoResolved -Force
+    }
 }
 
 Start-Transcript -Path "$logdir\ram-tech-utility_$dateTime.log" -Append -NoClobber | Out-Null
