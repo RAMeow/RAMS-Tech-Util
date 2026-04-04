@@ -33,18 +33,7 @@ if not exist "%PAYLOAD%" (
   exit /b 1
 )
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; ^
-   Import-Module ps2exe; ^
-   Invoke-PS2EXE ^
-     -inputFile '%PS1%' ^
-     -outputFile '%OUT%' ^
-     -iconFile '%ICON%' ^
-     -noConsole ^
-     -embedFiles @{ ^
-       \"$env:LOCALAPPDATA\RAM-Tech-Utility\winutil.ps1\" = '%PAYLOAD%' ^
-     } ^
-     -verbose"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; Import-Module ps2exe; Invoke-PS2EXE -inputFile '%PS1%' -outputFile '%OUT%' -iconFile '%ICON%' -noConsole -embedFiles @{ \"$env:LOCALAPPDATA\RAM-Tech-Utility\winutil.ps1\" = '%PAYLOAD%' } -verbose"
 
 if errorlevel 1 (
   echo.
