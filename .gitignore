@@ -9,6 +9,11 @@
 # Visual Studio user-specific files
 .vs/
 
+### Build artifacts ###
+RAM-Tech-Utility.exe
+*.exe
+
+### Symbols / debug ###
 winutil.pdb
 
 ### Preprocessor Hashes ###
@@ -19,12 +24,15 @@ winutil.pdb
 # Folder config file
 [Dd]esktop.ini
 
-# Ignore Generated XAML Files
+# Ignore generated XAML files
 xaml/inputApp.xaml
 xaml/inputFeatures.xaml
 xaml/inputTweaks.xaml
 
-# Executables and Configs
+# Generated runtime/build files
+winutil.ps1
+
+# Executables and configs
 winget.msixbundle
 pester.ps1
 *.psd*
@@ -32,9 +40,6 @@ ooshutup10.cfg
 winutil.exe.config
 Microsoft.UI.Xaml*
 license1.xml
-winutil.ps1
-RAM-Tech-Utility.exe
-*.exe
 
 # Libraries
 System.Management.Automation.dll
@@ -43,22 +48,19 @@ Microsoft.PowerShell.ConsoleHost.dll
 # Compressed files
 *.zip
 
-### MacOS ###
+### macOS ###
 
-# General
 .DS_Store
+
+### Local test / temp ###
 test.ps1
 
-# temporary excludes for docs
+# Temporary excludes for docs
 .github/site/
 
 binary/
 
-logs/
-
-.preprocessor_hashes.json
-
-# Hugo Files
+# Hugo files
 docs/public/
 docs/.hugo_build.lock
 docs/resources/
