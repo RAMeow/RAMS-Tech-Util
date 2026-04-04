@@ -40,6 +40,7 @@ try {
     }
 
     Start-Process -FilePath "powershell.exe" -WorkingDirectory $payloadRoot -ArgumentList @(
+        "-NoExit",
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
         "-File", "`"$mainScript`""
