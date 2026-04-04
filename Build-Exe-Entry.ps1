@@ -13,53 +13,86 @@ function Test-IsAdmin {
     return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
+function Get-AppRoot {
+    $baseDir = [System.AppDomain]::CurrentDomain.BaseDirectory
+    if (-not [string]::IsNullOrWhiteSpace($baseDir)) {
+        return $baseDir.TrimEnd('\')
+    }
+
+    if ($PSScriptRoot) {
+        return $PSScriptRoot.TrimEnd('\')
+    }
+
+    throw "Could not resolve application folder."
+}
+
+function Get-SelfPath {
+    if ($env:PS2EXE) {
+        return [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
+    }
+
+    if ($PSCommandPath) {
+        return $PSCommandPath
+    }
+
+    if ($MyInvocation.MyCommand.Path) {
+        return $MyInvocation.MyCommand.Path
+    }
+
+    throw "Could not resolve current launcher path."
+}
+
 try {
     Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
-    $root = [System.AppDomain]::CurrentDomain.BaseDirectory
-    if ([string]::IsNullOrWhiteSpace($root)) {
-        throw "Could not resolve application folder."
-    }
-
+    $root = Get-AppRoot
     Set-Location $root
 
     if (-not (Test-IsAdmin)) {
-        $argList = @(
-            '-NoProfile',
-            '-ExecutionPolicy', 'Bypass',
-            '-File', ('"{0}"' -f (Join-Path $root 'Build-Exe-Entry.ps1'))
-        )
+        $selfPath = Get-SelfPath
 
-        if ($Config) { $argList += @('-Config', ('"{0}"' -f $Config)) }
+        $argList = @()
+        if ($Config) { $argList += @('-Config', "`"$Config`"") }
         if ($Run) { $argList += '-Run' }
         if ($NoUI) { $argList += '-NoUI' }
         if ($Offline) { $argList += '-Offline' }
 
-        Start-Process -FilePath 'powershell.exe' -Verb RunAs -WorkingDirectory $root -ArgumentList ($argList -join ' ')
+        if ($selfPath.ToLower().EndsWith(".exe")) {
+            Start-Process -FilePath $selfPath -Verb RunAs -WorkingDirectory $root -ArgumentList ($argList -join ' ')
+        }
+        else {
+            $psArgs = @(
+                '-NoProfile',
+                '-ExecutionPolicy', 'Bypass',
+                '-File', "`"$selfPath`""
+            ) + $argList
+
+            Start-Process -FilePath 'powershell.exe' -Verb RunAs -WorkingDirectory $root -ArgumentList ($psArgs -join ' ')
+        }
+
         exit
     }
 
     $Host.UI.RawUI.WindowTitle = "RAM Tech Utility"
 
     $compiled = Join-Path $root 'winutil.ps1'
+    $compileScript = Join-Path $root 'Compile.ps1'
+
     if (-not (Test-Path $compiled)) {
-        Write-Host 'Compiling RAM Tech Utility from source...' -ForegroundColor Cyan
-        try {
-            & (Join-Path $root 'Compile.ps1')
-            if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        if (-not (Test-Path $compileScript)) {
+            throw "Could not find Compile.ps1 in: $root"
         }
-        catch {
-            Write-Host "Compile failed: $($_.Exception.Message)" -ForegroundColor Red
-            Write-Host 'Open Compile.ps1 in PowerShell to see the exact failing line.' -ForegroundColor Yellow
-            Read-Host 'Press Enter to exit'
-            exit 1
+
+        Write-Host "Compiling RAM Tech Utility from source..." -ForegroundColor Cyan
+        & $compileScript
+
+        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+            throw "Compile.ps1 exited with code $LASTEXITCODE"
         }
     }
 
     if (-not (Test-Path $compiled)) {
-        Write-Host 'RAM Tech Utility could not create winutil.ps1 during startup.' -ForegroundColor Red
-        Read-Host 'Press Enter to exit'
-        exit 1
+        throw "RAM Tech Utility could not create winutil.ps1 during startup."
     }
 
     $runArgs = @()
@@ -82,6 +115,6 @@ catch {
     }
     catch {
         Write-Host $_.Exception.Message
-        Read-Host 'Press Enter to exit'
+        Read-Host "Press Enter to exit"
     }
 }
