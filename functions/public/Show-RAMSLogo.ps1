@@ -1,7 +1,7 @@
 function Show-RAMSLogo {
     Write-Host @"
 ====================================================
-RRRRRR   AAAAAA   MM   MM  ''   SSSSS    
+RRRRRR   AAAAAA   MM   MM  ''   SSSSS
 R     R  A    A   MMM MMM   '  SS
 RRRRRR   AAAAAA   MM M MM      SSSSS   Tech Utility
 R   RR   A    A   MM   MM         SS

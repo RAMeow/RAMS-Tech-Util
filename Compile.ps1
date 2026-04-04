@@ -43,31 +43,28 @@ function Update-Progress {
 Update-Progress "Pre-req: Running Preprocessor..." 0
 
 # Dot source the 'Invoke-Preprocessing' function
-$preprocessingFilePath = Join-Path $workingdir "tools\Invoke-Preprocessing.ps1"
+$preprocessingFilePath = ".\tools\Invoke-Preprocessing.ps1"
 . $preprocessingFilePath
 
 $excludedFiles = @()
 
 # Add directories only if they exist
-$gitDir = Join-Path $workingdir ".git"
-$binaryDir = Join-Path $workingdir "binary"
-
-if (Test-Path $gitDir) { $excludedFiles += $gitDir }
-if (Test-Path $binaryDir) { $excludedFiles += $binaryDir }
+if (Test-Path '.\.git\') { $excludedFiles += '.\.git\' }
+if (Test-Path '.\binary\') { $excludedFiles += '.\binary\' }
 
 # Add files that should always be excluded
 $alwaysExcluded = @(
-    (Join-Path $workingdir ".gitignore"),
-    (Join-Path $workingdir ".gitattributes"),
-    (Join-Path $workingdir ".github\CODEOWNERS"),
-    (Join-Path $workingdir "LICENSE"),
+    '.\.gitignore',
+    '.\.gitattributes',
+    '.\.github\CODEOWNERS',
+    '.\LICENSE',
     $preprocessingFilePath,
-    "*.png",
-    (Join-Path $workingdir ".preprocessor_hashes.json")
+    '*.png',
+    '.\.preprocessor_hashes.json'
 )
 
 foreach ($excludePath in $alwaysExcluded) {
-    if ($excludePath -like "*.png") {
+    if ($excludePath -like '*.png') {
         $excludedFiles += $excludePath
     }
     elseif (Test-Path $excludePath) {
@@ -83,22 +80,20 @@ Update-Progress "Pre-req: Allocating Memory" 0
 $script_content = [System.Collections.Generic.List[string]]::new()
 
 Update-Progress "Adding: Version" 10
-$startScriptPath = Join-Path $workingdir "scripts\start.ps1"
 $script_content.Add(
-    (Get-Content $startScriptPath -Raw).Replace('#{replaceme}', (Get-Date -Format "yy.MM.dd"))
+    (Get-Content ".\scripts\start.ps1" -Raw).Replace('#{replaceme}', (Get-Date -Format "yy.MM.dd"))
 )
 
 Update-Progress "Adding: Functions" 20
-Get-ChildItem (Join-Path $workingdir "functions") -Recurse -File | ForEach-Object {
+Get-ChildItem ".\functions" -Recurse -File | ForEach-Object {
     $script_content.Add((Get-Content $_.FullName -Raw))
 }
 
 Update-Progress "Adding: Config *.json" 40
-Get-ChildItem (Join-Path $workingdir "config") -File | Where-Object { $_.Extension -eq ".json" } | ForEach-Object {
+Get-ChildItem ".\config" -File | Where-Object { $_.Extension -eq ".json" } | ForEach-Object {
     $json = Get-Content $_.FullName -Raw
     $jsonAsObject = $json | ConvertFrom-Json
 
-    # Add 'WPFInstall' as a prefix to every entry-name in 'applications.json'
     if ($_.Name -eq "applications.json") {
         foreach ($appEntryName in @($jsonAsObject.PSObject.Properties.Name)) {
             $appEntryContent = $jsonAsObject.$appEntryName
@@ -115,9 +110,7 @@ $($jsonAsObject | ConvertTo-Json -Depth 3)
     $script_content.Add("`$sync.configs.$($_.BaseName) = @'`r`n$json`r`n'@ | ConvertFrom-Json")
 }
 
-# Read the entire XAML file as a single string
-$xamlPath = Join-Path $workingdir "xaml\inputXML.xaml"
-$xaml = Get-Content $xamlPath -Raw
+$xaml = Get-Content ".\xaml\inputXML.xaml" -Raw
 
 Update-Progress "Adding: Xaml" 90
 $script_content.Add(@"
@@ -127,10 +120,7 @@ $xaml
 "@)
 
 Update-Progress "Adding: autounattend.xml" 95
-$autounattendPath = Join-Path $workingdir "tools\autounattend.xml"
-$autounattendRaw = Get-Content $autounattendPath -Raw
-
-# Strip XML comments (<!-- ... -->, including multi-line)
+$autounattendRaw = Get-Content ".\tools\autounattend.xml" -Raw
 $autounattendRaw = [regex]::Replace(
     $autounattendRaw,
     '<!--.*?-->',
@@ -138,7 +128,6 @@ $autounattendRaw = [regex]::Replace(
     [System.Text.RegularExpressions.RegexOptions]::Singleline
 )
 
-# Drop blank lines and trim trailing whitespace per line
 $autounattendXml = (
     $autounattendRaw -split "`r?`n" |
     Where-Object { $_.Trim() -ne '' } |
@@ -151,13 +140,12 @@ $autounattendXml
 '@
 "@)
 
-$mainScriptPath = Join-Path $workingdir "scripts\main.ps1"
-$script_content.Add((Get-Content $mainScriptPath -Raw))
+$script_content.Add((Get-Content ".\scripts\main.ps1" -Raw))
 
 Update-Progress "Removing temporary files" 99
-Remove-Item (Join-Path $workingdir "xaml\inputApp.xaml") -ErrorAction SilentlyContinue
-Remove-Item (Join-Path $workingdir "xaml\inputTweaks.xaml") -ErrorAction SilentlyContinue
-Remove-Item (Join-Path $workingdir "xaml\inputFeatures.xaml") -ErrorAction SilentlyContinue
+Remove-Item ".\xaml\inputApp.xaml" -ErrorAction SilentlyContinue
+Remove-Item ".\xaml\inputTweaks.xaml" -ErrorAction SilentlyContinue
+Remove-Item ".\xaml\inputFeatures.xaml" -ErrorAction SilentlyContinue
 
 Set-Content -Path $generatedScriptPath -Value ($script_content -join "`r`n") -Encoding ascii
 Write-Progress -Activity "Compiling" -Completed
