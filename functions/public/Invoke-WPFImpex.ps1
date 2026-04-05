@@ -2,13 +2,13 @@ function Invoke-WPFImpex {
     <#
 
     .SYNOPSIS
-        Handles importing and exporting of the checkboxes checked for the tweaks section
+        Handles importing and exporting of the selected apps, tweaks, toggles, and features.
 
     .PARAMETER type
         Indicates whether to 'import' or 'export'
 
-    .PARAMETER checkbox
-        The checkbox to export to a file or apply the imported file to
+    .PARAMETER Config
+        Optional config path or URL to import from, or file path to export to
 
     .EXAMPLE
         Invoke-WPFImpex -type "export"
@@ -20,21 +20,24 @@ function Invoke-WPFImpex {
     )
 
     function ConfigDialog {
-        if (!$Config) {
+        if (-not $Config) {
             switch ($type) {
                 "export" { $FileBrowser = New-Object System.Windows.Forms.SaveFileDialog }
                 "import" { $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog }
             }
+
             $FileBrowser.InitialDirectory = [Environment]::GetFolderPath('Desktop')
             $FileBrowser.Filter = "JSON Files (*.json)|*.json"
             $FileBrowser.ShowDialog() | Out-Null
 
-            if ($FileBrowser.FileName -eq "") {
+            if ([string]::IsNullOrWhiteSpace($FileBrowser.FileName)) {
                 return $null
-            } else {
+            }
+            else {
                 return $FileBrowser.FileName
             }
-        } else {
+        }
+        else {
             return $Config
         }
     }
@@ -43,44 +46,71 @@ function Invoke-WPFImpex {
         "export" {
             try {
                 $Config = ConfigDialog
+
                 if ($Config) {
-                    $allConfs = ($sync.selectedApps + $sync.selectedTweaks + $sync.selectedToggles + $sync.selectedFeatures) | ForEach-Object { [string]$_ }
-                    if (-not $allConfs) {
+                    $allConfs = ($sync.selectedApps + $sync.selectedTweaks + $sync.selectedToggles + $sync.selectedFeatures) |
+                        ForEach-Object { [string]$_ }
+
+                    if (-not $allConfs -or $allConfs.Count -eq 0) {
                         [System.Windows.MessageBox]::Show(
                             "No settings are selected to export. Please select at least one app, tweak, toggle, or feature before exporting.",
-                            "Nothing to Export", "OK", "Warning")
+                            "Nothing to Export",
+                            "OK",
+                            "Warning"
+                        ) | Out-Null
                         return
                     }
+
                     $jsonFile = $allConfs | ConvertTo-Json
-                    $jsonFile | Out-File $Config -Force
-                    "iex ""& { `$(irm https://christitus.com/win) } -Config '$Config'""" | Set-Clipboard
+                    $jsonFile | Out-File $Config -Force -Encoding utf8
+
+                    try {
+                        Set-Clipboard -Value $Config
+                    }
+                    catch {
+                        Write-Warning "Export succeeded, but the file path could not be copied to the clipboard."
+                    }
+
+                    [System.Windows.MessageBox]::Show(
+                        "Configuration exported successfully.`r`n`r`nSaved to:`r`n$Config`r`n`r`nThe file path has been copied to the clipboard.",
+                        "Export Complete",
+                        "OK",
+                        "Information"
+                    ) | Out-Null
                 }
-            } catch {
+            }
+            catch {
                 Write-Error "An error occurred while exporting: $_"
             }
         }
+
         "import" {
             try {
                 $Config = ConfigDialog
+
                 if ($Config) {
                     try {
                         if ($Config -match '^https?://') {
                             $jsonFile = (Invoke-WebRequest "$Config").Content | ConvertFrom-Json
-                        } else {
+                        }
+                        else {
                             $jsonFile = Get-Content $Config | ConvertFrom-Json
                         }
-                    } catch {
+                    }
+                    catch {
                         Write-Error "Failed to load the JSON file from the specified path or URL: $_"
                         return
                     }
-                    # TODO how to handle old style? detected json type then flatten it in a func?
-                    # $flattenedJson = $jsonFile.PSObject.Properties.Where({ $_.Name -ne "Install" }).ForEach({ $_.Value })
+
                     $flattenedJson = $jsonFile
 
                     if (-not $flattenedJson) {
                         [System.Windows.MessageBox]::Show(
                             "The selected file contains no settings to import. No changes have been made.",
-                            "Empty Configuration", "OK", "Warning")
+                            "Empty Configuration",
+                            "OK",
+                            "Warning"
+                        ) | Out-Null
                         return
                     }
 
@@ -93,18 +123,26 @@ function Invoke-WPFImpex {
 
                     Update-WinUtilSelections -flatJson $flattenedJson
 
-                    if (!$PARAM_NOUI) {
-                        # Set flag so toggle Checked/Unchecked events don't trigger registry writes
-                        # while we're programmatically restoring UI state from the imported config
+                    if (-not $PARAM_NOUI) {
+                        # Prevent toggle handlers from firing while restoring imported UI state
                         $sync.ImportInProgress = $true
                         try {
                             Reset-WPFCheckBoxes -doToggles $true
-                        } finally {
+                        }
+                        finally {
                             $sync.ImportInProgress = $false
                         }
                     }
+
+                    [System.Windows.MessageBox]::Show(
+                        "Configuration imported successfully.",
+                        "Import Complete",
+                        "OK",
+                        "Information"
+                    ) | Out-Null
                 }
-            } catch {
+            }
+            catch {
                 Write-Error "An error occurred while importing: $_"
             }
         }
