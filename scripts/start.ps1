@@ -121,4 +121,28 @@ Start-Transcript -Path "$logdir\ram-tech-utility_$dateTime.log" -Append -NoClobb
 
 # Set PowerShell window title
 $Host.UI.RawUI.WindowTitle = "RAM Tech Utility (Admin)"
+
+try {
+    $rawUI = $Host.UI.RawUI
+    $currentBuffer = $rawUI.BufferSize
+
+    $newWidth = 65
+    #92
+    $newHeight = 24
+    #14
+
+    if ($currentBuffer.Width -lt $newWidth) {
+        $currentBuffer.Width = $newWidth
+    }
+    if ($currentBuffer.Height -lt $newHeight) {
+        $currentBuffer.Height = $newHeight
+    }
+
+    $rawUI.BufferSize = $currentBuffer
+    $rawUI.WindowSize = New-Object System.Management.Automation.Host.Size($newWidth, $newHeight)
+}
+catch {
+    Write-Host "Could not resize PowerShell window: $($_.Exception.Message)" -ForegroundColor Yellow
+}
+
 Clear-Host
