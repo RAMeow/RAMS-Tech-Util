@@ -457,11 +457,6 @@ $NavLogo.Add_PreviewMouseLeftButtonDown({
 $previewHandler = [System.Windows.Input.MouseButtonEventHandler]$OpenRamWebsite
 $clickHandler = [System.Windows.Input.MouseButtonEventHandler]$OpenRamWebsite
 
-$NavLogoPanel.AddHandler([System.Windows.UIElement]::PreviewMouseLeftButtonUpEvent, $previewHandler, $true)
-$NavLogoPanel.AddHandler([System.Windows.UIElement]::MouseLeftButtonUpEvent, $clickHandler, $true)
-$NavLogo.AddHandler([System.Windows.UIElement]::PreviewMouseLeftButtonUpEvent, $previewHandler, $true)
-$NavLogo.AddHandler([System.Windows.UIElement]::MouseLeftButtonUpEvent, $clickHandler, $true)
-
 $sync["logorender"] = (Invoke-WinUtilAssets -Type "Logo" -Size 90 -Render)
 $sync["checkmarkrender"] = (Invoke-WinUtilAssets -Type "checkmark" -Size 512 -Render)
 $sync["warningrender"] = (Invoke-WinUtilAssets -Type "warning" -Size 512 -Render)
