@@ -2,7 +2,7 @@
 .NOTES
     Author         : RAM Tech Utility
     Project        : RAM Tech Utility
-    Version        : 26.04.04
+    Version        : 26.04.05.02
 #>
 
 param (
@@ -72,7 +72,7 @@ Add-Type -AssemblyName System.Windows.Forms
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
 $sync.PSScriptRoot = $PSScriptRoot
-$sync.version = "26.04.04"
+$sync.version = "26.04.05.02"
 $sync.configs = @{}
 $sync.Buttons = [System.Collections.Generic.List[PSObject]]::new()
 $sync.preferences = @{}
@@ -1965,12 +1965,21 @@ function Invoke-WinUtilFontScaling {
 
 
 function Invoke-WinUtilInstallPSProfile {
+    try {
+        $message = @"
+RAM Tech Utility PowerShell profile setup is not configured yet.
 
-    if (Test-Path $Profile) {
-        Rename-Item $Profile -NewName ($Profile + '.bak')
+The old upstream profile installer has been disabled to prevent pulling or launching external branding or remote profile content.
+
+If you want this feature later, replace this function with a RAM-specific profile installer.
+"@
+
+        Show-CustomDialog -Title "PowerShell Profile" -Message $message -EnableScroll $true
     }
-
-    Start-Process pwsh -ArgumentList '-Command "irm https://github.com/ChrisTitusTech/powershell-profile/raw/main/setup.ps1 | iex"'
+    catch {
+        Write-Host "PowerShell profile setup is not configured yet." -ForegroundColor Yellow
+        Write-Host $_.Exception.Message -ForegroundColor Red
+    }
 }
 
 function Write-Win11ISOLog {
@@ -5305,13 +5314,13 @@ function Invoke-WPFImpex {
     <#
 
     .SYNOPSIS
-        Handles importing and exporting of the checkboxes checked for the tweaks section
+        Handles importing and exporting of the selected apps, tweaks, toggles, and features.
 
     .PARAMETER type
         Indicates whether to 'import' or 'export'
 
-    .PARAMETER checkbox
-        The checkbox to export to a file or apply the imported file to
+    .PARAMETER Config
+        Optional config path or URL to import from, or file path to export to
 
     .EXAMPLE
         Invoke-WPFImpex -type "export"
@@ -5323,21 +5332,24 @@ function Invoke-WPFImpex {
     )
 
     function ConfigDialog {
-        if (!$Config) {
+        if (-not $Config) {
             switch ($type) {
                 "export" { $FileBrowser = New-Object System.Windows.Forms.SaveFileDialog }
                 "import" { $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog }
             }
+
             $FileBrowser.InitialDirectory = [Environment]::GetFolderPath('Desktop')
             $FileBrowser.Filter = "JSON Files (*.json)|*.json"
             $FileBrowser.ShowDialog() | Out-Null
 
-            if ($FileBrowser.FileName -eq "") {
+            if ([string]::IsNullOrWhiteSpace($FileBrowser.FileName)) {
                 return $null
-            } else {
+            }
+            else {
                 return $FileBrowser.FileName
             }
-        } else {
+        }
+        else {
             return $Config
         }
     }
@@ -5346,44 +5358,71 @@ function Invoke-WPFImpex {
         "export" {
             try {
                 $Config = ConfigDialog
+
                 if ($Config) {
-                    $allConfs = ($sync.selectedApps + $sync.selectedTweaks + $sync.selectedToggles + $sync.selectedFeatures) | ForEach-Object { [string]$_ }
-                    if (-not $allConfs) {
+                    $allConfs = ($sync.selectedApps + $sync.selectedTweaks + $sync.selectedToggles + $sync.selectedFeatures) |
+                        ForEach-Object { [string]$_ }
+
+                    if (-not $allConfs -or $allConfs.Count -eq 0) {
                         [System.Windows.MessageBox]::Show(
                             "No settings are selected to export. Please select at least one app, tweak, toggle, or feature before exporting.",
-                            "Nothing to Export", "OK", "Warning")
+                            "Nothing to Export",
+                            "OK",
+                            "Warning"
+                        ) | Out-Null
                         return
                     }
+
                     $jsonFile = $allConfs | ConvertTo-Json
-                    $jsonFile | Out-File $Config -Force
-                    "iex ""& { `$(irm https://christitus.com/win) } -Config '$Config'""" | Set-Clipboard
+                    $jsonFile | Out-File $Config -Force -Encoding utf8
+
+                    try {
+                        Set-Clipboard -Value $Config
+                    }
+                    catch {
+                        Write-Warning "Export succeeded, but the file path could not be copied to the clipboard."
+                    }
+
+                    [System.Windows.MessageBox]::Show(
+                        "Configuration exported successfully.`r`n`r`nSaved to:`r`n$Config`r`n`r`nThe file path has been copied to the clipboard.",
+                        "Export Complete",
+                        "OK",
+                        "Information"
+                    ) | Out-Null
                 }
-            } catch {
+            }
+            catch {
                 Write-Error "An error occurred while exporting: $_"
             }
         }
+
         "import" {
             try {
                 $Config = ConfigDialog
+
                 if ($Config) {
                     try {
                         if ($Config -match '^https?://') {
                             $jsonFile = (Invoke-WebRequest "$Config").Content | ConvertFrom-Json
-                        } else {
+                        }
+                        else {
                             $jsonFile = Get-Content $Config | ConvertFrom-Json
                         }
-                    } catch {
+                    }
+                    catch {
                         Write-Error "Failed to load the JSON file from the specified path or URL: $_"
                         return
                     }
-                    # TODO how to handle old style? detected json type then flatten it in a func?
-                    # $flattenedJson = $jsonFile.PSObject.Properties.Where({ $_.Name -ne "Install" }).ForEach({ $_.Value })
+
                     $flattenedJson = $jsonFile
 
                     if (-not $flattenedJson) {
                         [System.Windows.MessageBox]::Show(
                             "The selected file contains no settings to import. No changes have been made.",
-                            "Empty Configuration", "OK", "Warning")
+                            "Empty Configuration",
+                            "OK",
+                            "Warning"
+                        ) | Out-Null
                         return
                     }
 
@@ -5396,18 +5435,26 @@ function Invoke-WPFImpex {
 
                     Update-WinUtilSelections -flatJson $flattenedJson
 
-                    if (!$PARAM_NOUI) {
-                        # Set flag so toggle Checked/Unchecked events don't trigger registry writes
-                        # while we're programmatically restoring UI state from the imported config
+                    if (-not $PARAM_NOUI) {
+                        # Prevent toggle handlers from firing while restoring imported UI state
                         $sync.ImportInProgress = $true
                         try {
                             Reset-WPFCheckBoxes -doToggles $true
-                        } finally {
+                        }
+                        finally {
                             $sync.ImportInProgress = $false
                         }
                     }
+
+                    [System.Windows.MessageBox]::Show(
+                        "Configuration imported successfully.",
+                        "Import Complete",
+                        "OK",
+                        "Information"
+                    ) | Out-Null
                 }
-            } catch {
+            }
+            catch {
                 Write-Error "An error occurred while importing: $_"
             }
         }
@@ -16208,16 +16255,18 @@ $sync["Form"].Add_Loaded({
 
 $NavLogoPanel = $sync["Form"].FindName("NavLogoPanel")
 $NavLogo = (Invoke-WinUtilAssets -Type "logo" -Size 25)
+
+$NavLogoPanel.Children.Clear()
 $NavLogoPanel.Children.Add($NavLogo) | Out-Null
 $NavLogoPanel.Background = [System.Windows.Media.Brushes]::Transparent
 $NavLogoPanel.Cursor = [System.Windows.Input.Cursors]::Hand
 $NavLogo.Cursor = [System.Windows.Input.Cursors]::Hand
 $NavLogoPanel.ToolTip = "Open RAM'S COMPUTER REPAIR website"
 $NavLogo.ToolTip = "Open RAM'S COMPUTER REPAIR website"
+$NavLogoPanel.IsHitTestVisible = $true
+$NavLogo.IsHitTestVisible = $true
 
-$OpenRamWebsite = {
-    param($sender, $e)
-
+function Open-RAMWebsite {
     try {
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = "https://www.ramscomputerrepair.net/"
@@ -16226,25 +16275,27 @@ $OpenRamWebsite = {
     }
     catch {
         try {
-            Start-Process explorer.exe "https://www.ramscomputerrepair.net/" | Out-Null
+            Start-Process "explorer.exe" "https://www.ramscomputerrepair.net/" | Out-Null
         }
         catch {
-            Write-Host "Failed to open website: $($_.Exception.Message)"
+            Write-Host "Failed to open website: $($_.Exception.Message)" -ForegroundColor Red
         }
-    }
-
-    if ($e) {
-        $e.Handled = $true
     }
 }
 
+$NavLogoPanel.Add_PreviewMouseLeftButtonDown({
+    param($sender, $e)
+    Open-RAMWebsite
+    $e.Handled = $true
+})
+
+$NavLogo.Add_PreviewMouseLeftButtonDown({
+    param($sender, $e)
+    Open-RAMWebsite
+    $e.Handled = $true
+})
 $previewHandler = [System.Windows.Input.MouseButtonEventHandler]$OpenRamWebsite
 $clickHandler = [System.Windows.Input.MouseButtonEventHandler]$OpenRamWebsite
-
-$NavLogoPanel.AddHandler([System.Windows.UIElement]::PreviewMouseLeftButtonUpEvent, $previewHandler, $true)
-$NavLogoPanel.AddHandler([System.Windows.UIElement]::MouseLeftButtonUpEvent, $clickHandler, $true)
-$NavLogo.AddHandler([System.Windows.UIElement]::PreviewMouseLeftButtonUpEvent, $previewHandler, $true)
-$NavLogo.AddHandler([System.Windows.UIElement]::MouseLeftButtonUpEvent, $clickHandler, $true)
 
 $sync["logorender"] = (Invoke-WinUtilAssets -Type "Logo" -Size 90 -Render)
 $sync["checkmarkrender"] = (Invoke-WinUtilAssets -Type "checkmark" -Size 512 -Render)
