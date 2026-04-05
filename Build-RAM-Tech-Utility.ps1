@@ -22,7 +22,7 @@ if (-not (Test-Path $payload)) {
 # Example: April 4, 2026 at 2 AM -> 26.04.04.02
 $version = Get-Date -Format "yy.MM.dd.HH"
 
-# Persist the generated version for reference
+# Persist the generated version for Compile.ps1 and reference
 Set-Content -Path $versionFile -Value $version -Encoding utf8
 
 $out = Join-Path $root "RAM-Tech-Utility.exe"
@@ -51,6 +51,12 @@ Invoke-PS2EXE `
     -inputFile $ps1 `
     -outputFile $out `
     -iconFile $icon `
+    -version $version `
+    -title "RAM Tech Utility" `
+    -product "RAM Tech Utility" `
+    -company "RAMS COMPUTER REPAIR" `
+    -description "RAM Tech Utility executable build" `
+    -copyright "RAMS COMPUTER REPAIR" `
     -noConsole `
     -embedFiles @{
         "$env:LOCALAPPDATA\RAM-Tech-Utility\winutil.ps1" = $payload
