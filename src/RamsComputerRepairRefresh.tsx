@@ -122,7 +122,7 @@ if (isRemoteSupportRoute) {
         .header-inner { display: flex; flex-direction: column; gap: 14px; padding: 16px 0; }
         .header-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
         .logo-row { display: flex; align-items: center; gap: 12px; min-width: 0; }
-        
+
         .logo-row:hover {
   opacity: 0.85;
   transform: scale(1.02);
@@ -162,7 +162,7 @@ if (isRemoteSupportRoute) {
         .three-stats { grid-template-columns: repeat(3, minmax(0,1fr)); }
         .reviews-right { grid-template-columns: 1fr 240px; align-items:start; gap:24px; }
         .portal-shell { grid-template-columns: .95fr 1.05fr; margin-top:28px; }
-        .portal-stat-grid { grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; }        
+        .portal-stat-grid { grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; }
         .highlight-card, .card.light, .stat-card, .portal-stat, .portal-nav-card { border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); border-radius:20px; padding:18px; }
         .card.dark, .panel, .qr-box, .cta-box, .portal-panel { border:1px solid rgba(255,255,255,.1); background:rgba(15,23,42,.82); border-radius:24px; padding:24px; }
         .card h3, .section-title, .panel-title, .portal-title { margin:0; font-weight:800; }

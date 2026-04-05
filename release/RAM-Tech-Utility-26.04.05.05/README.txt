@@ -1,4 +1,4 @@
-﻿RAM Tech Utility
+RAM Tech Utility
 Version: 26.04.05.05
 
 RAM'S COMPUTER REPAIR

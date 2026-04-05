@@ -165,7 +165,7 @@ async function deleteSelectedFailedLoginAttempts() {
     return false;
   }
 }
-  
+
 async function uploadSelectedFile(file: File) {
     const formData = new FormData();
     formData.append("file", file);

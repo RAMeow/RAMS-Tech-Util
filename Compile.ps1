@@ -60,14 +60,27 @@ $alwaysExcluded = @(
     '.\LICENSE',
     $preprocessingFilePath,
     '*.png',
+    '*.ico',
+    '*.jpg',
+    '*.jpeg',
+    '*.gif',
+    '*.webp',
+    '*.bmp',
+    '*.avif',
+    '*.svg',
+    '*.exe',
+    '*.dll',
+    '*.zip',
+    '*.7z',
+    '*.pdf',
     '.\.preprocessor_hashes.json'
 )
 
 foreach ($excludePath in $alwaysExcluded) {
-    if ($excludePath -like '*.png') {
+    if ($excludePath.Contains('*') -or $excludePath.Contains('?')) {
         $excludedFiles += $excludePath
     }
-    elseif (Test-Path $excludePath) {
+    elseif (Test-Path -LiteralPath $excludePath) {
         $excludedFiles += $excludePath
     }
 }
@@ -87,24 +100,24 @@ if (-not (Test-Path $versionFile)) {
     throw "Missing version.txt"
 }
 
-$version = (Get-Content $versionFile -Raw).Trim()
+$version = (Get-Content -LiteralPath $versionFile -Raw).Trim()
 
 if ([string]::IsNullOrWhiteSpace($version)) {
     throw "version.txt is empty"
 }
 
 $script_content.Add(
-    (Get-Content ".\scripts\start.ps1" -Raw).Replace('#{replaceme}', $version)
+    (Get-Content -LiteralPath ".\scripts\start.ps1" -Raw).Replace('#{replaceme}', $version)
 )
 
 Update-Progress "Adding: Functions" 20
-Get-ChildItem ".\functions" -Recurse -File | ForEach-Object {
-    $script_content.Add((Get-Content $_.FullName -Raw))
+Get-ChildItem ".\functions" -Recurse -File -Filter "*.ps1" | ForEach-Object {
+    $script_content.Add((Get-Content -LiteralPath $_.FullName -Raw))
 }
 
 Update-Progress "Adding: Config *.json" 40
 Get-ChildItem ".\config" -File | Where-Object { $_.Extension -eq ".json" } | ForEach-Object {
-    $json = Get-Content $_.FullName -Raw
+    $json = Get-Content -LiteralPath $_.FullName -Raw
     $jsonAsObject = $json | ConvertFrom-Json
 
     if ($_.Name -eq "applications.json") {
@@ -123,7 +136,7 @@ $($jsonAsObject | ConvertTo-Json -Depth 3)
     $script_content.Add("`$sync.configs.$($_.BaseName) = @'`r`n$json`r`n'@ | ConvertFrom-Json")
 }
 
-$xaml = Get-Content ".\xaml\inputXML.xaml" -Raw
+$xaml = Get-Content -LiteralPath ".\xaml\inputXML.xaml" -Raw
 
 Update-Progress "Adding: Xaml" 90
 $script_content.Add(@"
@@ -133,7 +146,7 @@ $xaml
 "@)
 
 Update-Progress "Adding: autounattend.xml" 95
-$autounattendRaw = Get-Content ".\tools\autounattend.xml" -Raw
+$autounattendRaw = Get-Content -LiteralPath ".\tools\autounattend.xml" -Raw
 $autounattendRaw = [regex]::Replace(
     $autounattendRaw,
     '<!--.*?-->',
@@ -153,7 +166,7 @@ $autounattendXml
 '@
 "@)
 
-$script_content.Add((Get-Content ".\scripts\main.ps1" -Raw))
+$script_content.Add((Get-Content -LiteralPath ".\scripts\main.ps1" -Raw))
 
 Update-Progress "Removing temporary files" 99
 Remove-Item ".\xaml\inputApp.xaml" -ErrorAction SilentlyContinue

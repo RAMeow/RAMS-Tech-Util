@@ -19,7 +19,7 @@ $ErrorActionPreference = 'Stop'
 
 function Write-RAMStatus {
     param([string]$Message)
-    Write-Host "[RAM Tech Utility] $Message"
+    Write-Host "[RAM Tech Utility]$Message"
 }
 
 function Test-IsAdmin {

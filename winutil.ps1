@@ -2,7 +2,7 @@
 .NOTES
     Author         : RAM Tech Utility
     Project        : RAM Tech Utility
-    Version        : 26.04.05.05
+    Version        : 26.04.05.15
 #>
 
 param (
@@ -72,7 +72,7 @@ Add-Type -AssemblyName System.Windows.Forms
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
 $sync.PSScriptRoot = $PSScriptRoot
-$sync.version = "26.04.05.05"
+$sync.version = "26.04.05.15"
 $sync.configs = @{}
 $sync.Buttons = [System.Collections.Generic.List[PSObject]]::new()
 $sync.preferences = @{}
@@ -16092,21 +16092,7 @@ $sync.runspace = [runspacefactory]::CreateRunspacePool(
 # Open the RunspacePool instance
 $sync.runspace.Open()
 
-# Create classes for different exceptions
-class WingetFailedInstall : Exception {
-    [string]$additionalData
-    WingetFailedInstall($Message) : base($Message) {}
-}
-
-class ChocoFailedInstall : Exception {
-    [string]$additionalData
-    ChocoFailedInstall($Message) : base($Message) {}
-}
-
-class GenericException : Exception {
-    [string]$additionalData
-    GenericException($Message) : base($Message) {}
-}
+# Exception classes are provided elsewhere in the build.
 
 # Load the configuration files
 $sync.configs.applicationsHashtable = @{}
@@ -16224,6 +16210,222 @@ $xaml.SelectNodes("//*[@Name]") | ForEach-Object {
     $sync["$($psitem.Name)"] = $sync["Form"].FindName($psitem.Name)
 }
 
+
+# RAM Repairs helpers and direct button handlers
+$ramRepairButtonNames = @(
+    "WPFRAMRepairNewIntake",
+    "WPFRAMRepairMalware",
+    "WPFRAMRepairTuneup",
+    "WPFRAMRepairWindowsFix",
+    "WPFRAMRepairSaveSession",
+    "WPFRAMRepairClearSession"
+)
+
+function Get-RAMRepairSelectedStatus {
+    if ($sync.WPFRAMRepairStatusCombo -and $sync.WPFRAMRepairStatusCombo.SelectedItem) {
+        return $sync.WPFRAMRepairStatusCombo.SelectedItem.Content.ToString()
+    }
+
+    return "Not Started"
+}
+
+function Set-RAMRepairStatus {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Status
+    )
+
+    if (-not $sync.WPFRAMRepairStatusCombo) {
+        return
+    }
+
+    foreach ($item in $sync.WPFRAMRepairStatusCombo.Items) {
+        if ($item.Content.ToString() -eq $Status) {
+            $sync.WPFRAMRepairStatusCombo.SelectedItem = $item
+            return
+        }
+    }
+}
+
+function Clear-RAMRepairChecklist {
+    $checklistControlNames = @(
+        "WPFRAMRepairChecklistIntake",
+        "WPFRAMRepairChecklistBackup",
+        "WPFRAMRepairChecklistDiag",
+        "WPFRAMRepairChecklistDone",
+        "WPFRAMRepairChecklistQC",
+        "WPFRAMRepairChecklistPickup"
+    )
+
+    foreach ($controlName in $checklistControlNames) {
+        if ($sync[$controlName]) {
+            $sync[$controlName].IsChecked = $false
+        }
+    }
+}
+
+function Append-RAMRepairNote {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Text
+    )
+
+    if (-not $sync.WPFRAMRepairNotes) {
+        return
+    }
+
+    if ([string]::IsNullOrWhiteSpace($sync.WPFRAMRepairNotes.Text)) {
+        $sync.WPFRAMRepairNotes.Text = $Text
+    }
+    else {
+        $sync.WPFRAMRepairNotes.Text += [Environment]::NewLine + [Environment]::NewLine + $Text
+    }
+
+    $sync.WPFRAMRepairNotes.CaretIndex = $sync.WPFRAMRepairNotes.Text.Length
+    $sync.WPFRAMRepairNotes.ScrollToEnd()
+}
+
+function Reset-RAMRepairSession {
+    Clear-RAMRepairChecklist
+
+    if ($sync.WPFRAMRepairNotes) {
+        $sync.WPFRAMRepairNotes.Text = ""
+    }
+
+    Set-RAMRepairStatus -Status "Not Started"
+}
+
+function Save-RAMRepairSession {
+    try {
+        $documentsPath = [Environment]::GetFolderPath("MyDocuments")
+        $saveRoot = Join-Path $documentsPath "RAM Tech Utility"
+        $saveFolder = Join-Path $saveRoot "RepairSessions"
+
+        if (-not (Test-Path $saveRoot)) {
+            New-Item -Path $saveRoot -ItemType Directory -Force | Out-Null
+        }
+
+        if (-not (Test-Path $saveFolder)) {
+            New-Item -Path $saveFolder -ItemType Directory -Force | Out-Null
+        }
+
+        $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+        $savePath = Join-Path $saveFolder "repair-session-$timestamp.json"
+
+        $sessionData = [ordered]@{
+            savedAt = (Get-Date).ToString("s")
+            status = Get-RAMRepairSelectedStatus
+            notes = if ($sync.WPFRAMRepairNotes) { $sync.WPFRAMRepairNotes.Text } else { "" }
+            checklist = [ordered]@{
+                intakeCompleted = if ($sync.WPFRAMRepairChecklistIntake) { [bool]$sync.WPFRAMRepairChecklistIntake.IsChecked } else { $false }
+                backupConfirmed = if ($sync.WPFRAMRepairChecklistBackup) { [bool]$sync.WPFRAMRepairChecklistBackup.IsChecked } else { $false }
+                diagnosticsRun = if ($sync.WPFRAMRepairChecklistDiag) { [bool]$sync.WPFRAMRepairChecklistDiag.IsChecked } else { $false }
+                repairCompleted = if ($sync.WPFRAMRepairChecklistDone) { [bool]$sync.WPFRAMRepairChecklistDone.IsChecked } else { $false }
+                qcPassed = if ($sync.WPFRAMRepairChecklistQC) { [bool]$sync.WPFRAMRepairChecklistQC.IsChecked } else { $false }
+                readyForPickup = if ($sync.WPFRAMRepairChecklistPickup) { [bool]$sync.WPFRAMRepairChecklistPickup.IsChecked } else { $false }
+            }
+        }
+
+        $sessionData | ConvertTo-Json -Depth 5 | Set-Content -Path $savePath -Encoding UTF8
+
+        [System.Windows.MessageBox]::Show(
+            "Repair session saved to:`n$savePath",
+            "RAM Tech Utility",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        ) | Out-Null
+    }
+    catch {
+        [System.Windows.MessageBox]::Show(
+            "Failed to save repair session.`n$($_.Exception.Message)",
+            "RAM Tech Utility",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Error
+        ) | Out-Null
+    }
+}
+
+if ($sync.WPFRAMRepairNewIntake) {
+    $sync.WPFRAMRepairNewIntake.Add_Click({
+        Reset-RAMRepairSession
+        Set-RAMRepairStatus -Status "In Intake"
+
+        if ($sync.WPFRAMRepairChecklistIntake) {
+            $sync.WPFRAMRepairChecklistIntake.IsChecked = $true
+        }
+
+        $sync.WPFRAMRepairNotes.Text = @"
+[NEW REPAIR INTAKE]
+Repair opened: $(Get-Date -Format "yyyy-MM-dd hh:mm tt")
+Customer:
+Device:
+Issue Reported:
+Accessories Received:
+Initial Notes:
+"@
+
+        $sync.WPFRAMRepairNotes.CaretIndex = $sync.WPFRAMRepairNotes.Text.Length
+        $sync.WPFRAMRepairNotes.ScrollToEnd()
+        $sync.WPFRAMRepairNotes.Focus()
+    })
+}
+
+if ($sync.WPFRAMRepairMalware) {
+    $sync.WPFRAMRepairMalware.Add_Click({
+        Set-RAMRepairStatus -Status "Repair In Progress"
+        Append-RAMRepairNote -Text @"
+[MALWARE CLEANUP STARTED]
+- Symptoms:
+- Browser hijack:
+- AV alerts:
+- Tools used:
+- Outcome:
+"@
+    })
+}
+
+if ($sync.WPFRAMRepairTuneup) {
+    $sync.WPFRAMRepairTuneup.Add_Click({
+        Set-RAMRepairStatus -Status "Repair In Progress"
+        Append-RAMRepairNote -Text @"
+[PERFORMANCE TUNE-UP]
+- Startup review:
+- Temp cleanup:
+- Update check:
+- Drive space:
+- RAM usage:
+- Result:
+"@
+    })
+}
+
+if ($sync.WPFRAMRepairWindowsFix) {
+    $sync.WPFRAMRepairWindowsFix.Add_Click({
+        Set-RAMRepairStatus -Status "Diagnosing"
+        Append-RAMRepairNote -Text @"
+[WINDOWS REPAIR]
+- Boot issue:
+- Update issue:
+- Corruption suspected:
+- SFC run:
+- DISM run:
+- Result:
+"@
+    })
+}
+
+if ($sync.WPFRAMRepairSaveSession) {
+    $sync.WPFRAMRepairSaveSession.Add_Click({
+        Save-RAMRepairSession
+    })
+}
+
+if ($sync.WPFRAMRepairClearSession) {
+    $sync.WPFRAMRepairClearSession.Add_Click({
+        Reset-RAMRepairSession
+    })
+}
+
 # Persist Package Manager preference across RAM Tech Utility restarts
 $sync.ChocoRadioButton.Add_Checked({
     $sync.preferences.packagemanager = [PackageManagers]::Choco
@@ -16252,10 +16454,12 @@ $sync.Keys | ForEach-Object {
         }
 
         if ($controlType -eq "Button") {
-            $sync["$psitem"].Add_Click({
-                [System.Object]$Sender = $args[0]
-                Invoke-WPFButton $Sender.Name
-            })
+            if ($ramRepairButtonNames -notcontains $psitem) {
+                $sync["$psitem"].Add_Click({
+                    [System.Object]$Sender = $args[0]
+                    Invoke-WPFButton $Sender.Name
+                })
+            }
         }
 
         if ($controlType -eq "TextBlock") {
