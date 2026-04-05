@@ -1,0 +1,22 @@
+[
+  {
+    "title": "Remote Support Tool",
+  "description": "Download and run ONLY when instructed by RAM’S COMPUTER REPAIR. We will NEVER contact you first.",
+  "href": "/downloads/RAM-RemoteSupport.exe"
+  },
+  {
+    "title": "Run Remote Support (Backup)",
+    "description": "Launch via PowerShell if download is blocked.",
+    "href": "https://www.ramscomputerrepair.net/remote.ps1"
+  },
+  {
+    "title": "Client Intake Form",
+    "description": "Open the latest service intake form.",
+    "href": "/forms/intake.pdf"
+  },
+  {
+    "title": "Review Page",
+    "description": "Read current Google reviews.",
+    "href": "https://g.page/r/CYdLrRruJw6LEB0/review"
+  }
+]
