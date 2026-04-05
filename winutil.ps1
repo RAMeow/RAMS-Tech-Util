@@ -2,7 +2,7 @@
 .NOTES
     Author         : RAM Tech Utility
     Project        : RAM Tech Utility
-    Version        : 26.04.05.02
+    Version        : 26.04.05.03
 #>
 
 param (
@@ -72,7 +72,7 @@ Add-Type -AssemblyName System.Windows.Forms
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
 $sync.PSScriptRoot = $PSScriptRoot
-$sync.version = "26.04.05.02"
+$sync.version = "26.04.05.03"
 $sync.configs = @{}
 $sync.Buttons = [System.Collections.Generic.List[PSObject]]::new()
 $sync.preferences = @{}
@@ -121,6 +121,30 @@ Start-Transcript -Path "$logdir\ram-tech-utility_$dateTime.log" -Append -NoClobb
 
 # Set PowerShell window title
 $Host.UI.RawUI.WindowTitle = "RAM Tech Utility (Admin)"
+
+try {
+    $rawUI = $Host.UI.RawUI
+    $currentBuffer = $rawUI.BufferSize
+
+    $newWidth = 65
+    #92
+    $newHeight = 24
+    #14
+
+    if ($currentBuffer.Width -lt $newWidth) {
+        $currentBuffer.Width = $newWidth
+    }
+    if ($currentBuffer.Height -lt $newHeight) {
+        $currentBuffer.Height = $newHeight
+    }
+
+    $rawUI.BufferSize = $currentBuffer
+    $rawUI.WindowSize = New-Object System.Management.Automation.Host.Size($newWidth, $newHeight)
+}
+catch {
+    Write-Host "Could not resize PowerShell window: $($_.Exception.Message)" -ForegroundColor Yellow
+}
+
 Clear-Host
 
     function Add-SelectedAppsMenuItem {
