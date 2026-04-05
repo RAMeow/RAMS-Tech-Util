@@ -426,7 +426,7 @@ $NavLogo.ToolTip = "Open RAM'S COMPUTER REPAIR website"
 $NavLogoPanel.IsHitTestVisible = $true
 $NavLogo.IsHitTestVisible = $true
 
-$OpenRamWebsite = {
+function Open-RAMWebsite {
     try {
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = "https://www.ramscomputerrepair.net/"
@@ -435,29 +435,25 @@ $OpenRamWebsite = {
     }
     catch {
         try {
-            Start-Process "https://www.ramscomputerrepair.net/" -ErrorAction Stop | Out-Null
+            Start-Process "explorer.exe" "https://www.ramscomputerrepair.net/" | Out-Null
         }
         catch {
-            try {
-                Start-Process "explorer.exe" "https://www.ramscomputerrepair.net/" | Out-Null
-            }
-            catch {
-                Write-Host "Failed to open website: $($_.Exception.Message)" -ForegroundColor Red
-            }
+            Write-Host "Failed to open website: $($_.Exception.Message)" -ForegroundColor Red
         }
     }
 }
 
-$NavLogoPanel.Add_MouseLeftButtonUp({
-    & $OpenRamWebsite
-    $_.Handled = $true
+$NavLogoPanel.Add_PreviewMouseLeftButtonDown({
+    param($sender, $e)
+    Open-RAMWebsite
+    $e.Handled = $true
 })
 
-$NavLogo.Add_MouseLeftButtonUp({
-    & $OpenRamWebsite
-    $_.Handled = $true
+$NavLogo.Add_PreviewMouseLeftButtonDown({
+    param($sender, $e)
+    Open-RAMWebsite
+    $e.Handled = $true
 })
-
 $previewHandler = [System.Windows.Input.MouseButtonEventHandler]$OpenRamWebsite
 $clickHandler = [System.Windows.Input.MouseButtonEventHandler]$OpenRamWebsite
 
