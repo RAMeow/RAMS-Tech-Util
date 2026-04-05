@@ -415,16 +415,18 @@ $sync["Form"].Add_Loaded({
 
 $NavLogoPanel = $sync["Form"].FindName("NavLogoPanel")
 $NavLogo = (Invoke-WinUtilAssets -Type "logo" -Size 25)
+
+$NavLogoPanel.Children.Clear()
 $NavLogoPanel.Children.Add($NavLogo) | Out-Null
 $NavLogoPanel.Background = [System.Windows.Media.Brushes]::Transparent
 $NavLogoPanel.Cursor = [System.Windows.Input.Cursors]::Hand
 $NavLogo.Cursor = [System.Windows.Input.Cursors]::Hand
 $NavLogoPanel.ToolTip = "Open RAM'S COMPUTER REPAIR website"
 $NavLogo.ToolTip = "Open RAM'S COMPUTER REPAIR website"
+$NavLogoPanel.IsHitTestVisible = $true
+$NavLogo.IsHitTestVisible = $true
 
 $OpenRamWebsite = {
-    param($sender, $e)
-
     try {
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = "https://www.ramscomputerrepair.net/"
@@ -433,17 +435,28 @@ $OpenRamWebsite = {
     }
     catch {
         try {
-            Start-Process explorer.exe "https://www.ramscomputerrepair.net/" | Out-Null
+            Start-Process "https://www.ramscomputerrepair.net/" -ErrorAction Stop | Out-Null
         }
         catch {
-            Write-Host "Failed to open website: $($_.Exception.Message)"
+            try {
+                Start-Process "explorer.exe" "https://www.ramscomputerrepair.net/" | Out-Null
+            }
+            catch {
+                Write-Host "Failed to open website: $($_.Exception.Message)" -ForegroundColor Red
+            }
         }
     }
-
-    if ($e) {
-        $e.Handled = $true
-    }
 }
+
+$NavLogoPanel.Add_MouseLeftButtonUp({
+    & $OpenRamWebsite
+    $_.Handled = $true
+})
+
+$NavLogo.Add_MouseLeftButtonUp({
+    & $OpenRamWebsite
+    $_.Handled = $true
+})
 
 $previewHandler = [System.Windows.Input.MouseButtonEventHandler]$OpenRamWebsite
 $clickHandler = [System.Windows.Input.MouseButtonEventHandler]$OpenRamWebsite
