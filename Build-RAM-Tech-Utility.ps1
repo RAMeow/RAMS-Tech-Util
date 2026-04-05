@@ -3,6 +3,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ps1 = Join-Path $root "Build-Exe-Entry.ps1"
 $icon = Join-Path $root "logo.ico"
+$logoPng = Join-Path $root "logo.png"
+$logoIco = Join-Path $root "logo.ico"
 $payload = Join-Path $root "winutil.ps1"
 $versionFile = Join-Path $root "version.txt"
 
@@ -11,6 +13,14 @@ if (-not (Test-Path $ps1)) {
 }
 
 if (-not (Test-Path $icon)) {
+    throw "Missing logo.ico"
+}
+
+if (-not (Test-Path $logoPng)) {
+    throw "Missing logo.png"
+}
+
+if (-not (Test-Path $logoIco)) {
     throw "Missing logo.ico"
 }
 
@@ -60,6 +70,8 @@ Invoke-PS2EXE `
     -noConsole `
     -embedFiles @{
         "$env:LOCALAPPDATA\RAM-Tech-Utility\winutil.ps1" = $payload
+        "$env:LOCALAPPDATA\RAM-Tech-Utility\logo.png" = $logoPng
+        "$env:LOCALAPPDATA\RAM-Tech-Utility\logo.ico" = $logoIco
     } `
     -verbose
 

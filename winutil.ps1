@@ -2,7 +2,7 @@
 .NOTES
     Author         : RAM Tech Utility
     Project        : RAM Tech Utility
-    Version        : 26.04.05.03
+    Version        : 26.04.05.04
 #>
 
 param (
@@ -72,7 +72,7 @@ Add-Type -AssemblyName System.Windows.Forms
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
 $sync.PSScriptRoot = $PSScriptRoot
-$sync.version = "26.04.05.03"
+$sync.version = "26.04.05.04"
 $sync.configs = @{}
 $sync.Buttons = [System.Collections.Generic.List[PSObject]]::new()
 $sync.preferences = @{}
