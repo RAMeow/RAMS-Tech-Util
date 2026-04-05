@@ -1,8 +1,17 @@
 function Invoke-WinUtilInstallPSProfile {
+    try {
+        $message = @"
+RAM Tech Utility PowerShell profile setup is not configured yet.
 
-    if (Test-Path $Profile) {
-        Rename-Item $Profile -NewName ($Profile + '.bak')
+The old upstream profile installer has been disabled to prevent pulling or launching external branding or remote profile content.
+
+If you want this feature later, replace this function with a RAM-specific profile installer.
+"@
+
+        Show-CustomDialog -Title "PowerShell Profile" -Message $message -EnableScroll $true
     }
-
-    Start-Process pwsh -ArgumentList '-Command "irm https://github.com/ChrisTitusTech/powershell-profile/raw/main/setup.ps1 | iex"'
+    catch {
+        Write-Host "PowerShell profile setup is not configured yet." -ForegroundColor Yellow
+        Write-Host $_.Exception.Message -ForegroundColor Red
+    }
 }
