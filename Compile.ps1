@@ -80,8 +80,21 @@ Update-Progress "Pre-req: Allocating Memory" 0
 $script_content = [System.Collections.Generic.List[string]]::new()
 
 Update-Progress "Adding: Version" 10
+
+$versionFile = Join-Path $workingdir "version.txt"
+
+if (-not (Test-Path $versionFile)) {
+    throw "Missing version.txt"
+}
+
+$version = (Get-Content $versionFile -Raw).Trim()
+
+if ([string]::IsNullOrWhiteSpace($version)) {
+    throw "version.txt is empty"
+}
+
 $script_content.Add(
-    (Get-Content ".\scripts\start.ps1" -Raw).Replace('#{replaceme}', (Get-Date -Format "yy.MM.dd"))
+    (Get-Content ".\scripts\start.ps1" -Raw).Replace('#{replaceme}', $version)
 )
 
 Update-Progress "Adding: Functions" 20
