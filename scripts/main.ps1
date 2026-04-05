@@ -172,6 +172,31 @@ $ramRepairButtonNames = @(
     "WPFRAMRepairClearSession"
 )
 
+function Get-RAMRepairFieldValue {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ControlName
+    )
+
+    if ($sync[$ControlName] -and $null -ne $sync[$ControlName].Text) {
+        return $sync[$ControlName].Text.Trim()
+    }
+
+    return ""
+}
+
+function Set-RAMRepairFieldValue {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ControlName,
+        [string]$Value = ""
+    )
+
+    if ($sync[$ControlName] -and $null -ne $sync[$ControlName].Text) {
+        $sync[$ControlName].Text = $Value
+    }
+}
+
 function Get-RAMRepairSelectedStatus {
     if ($sync.WPFRAMRepairStatusCombo -and $sync.WPFRAMRepairStatusCombo.SelectedItem) {
         return $sync.WPFRAMRepairStatusCombo.SelectedItem.Content.ToString()
@@ -193,6 +218,7 @@ function Set-RAMRepairStatus {
     foreach ($item in $sync.WPFRAMRepairStatusCombo.Items) {
         if ($item.Content.ToString() -eq $Status) {
             $sync.WPFRAMRepairStatusCombo.SelectedItem = $item
+            Update-RAMRepairSummary
             return
         }
     }
@@ -236,48 +262,107 @@ function Append-RAMRepairNote {
     $sync.WPFRAMRepairNotes.ScrollToEnd()
 }
 
+
+function Get-RAMRepairCheckboxValue {
+    param([string]$ControlName)
+
+    if ($sync.ContainsKey($ControlName) -and $null -ne $sync[$ControlName]) {
+        return [bool]$sync[$ControlName].IsChecked
+    }
+
+    return $false
+}
+
+function Update-RAMRepairSummary {
+    $customer = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairCustomer"
+    $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
+    $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
+    $status = Get-RAMRepairSelectedStatus
+
+    if ($sync.WPFRAMRepairSummaryCustomer) {
+        $sync.WPFRAMRepairSummaryCustomer.Text = if ([string]::IsNullOrWhiteSpace($customer)) { "—" } else { $customer }
+    }
+
+    if ($sync.WPFRAMRepairSummaryDevice) {
+        $sync.WPFRAMRepairSummaryDevice.Text = if ([string]::IsNullOrWhiteSpace($device)) { "—" } else { $device }
+    }
+
+    if ($sync.WPFRAMRepairSummaryStatus) {
+        $sync.WPFRAMRepairSummaryStatus.Text = if ([string]::IsNullOrWhiteSpace($status)) { "Not Started" } else { $status }
+    }
+
+    if ($sync.WPFRAMRepairSummaryIssue) {
+        $sync.WPFRAMRepairSummaryIssue.Text = if ([string]::IsNullOrWhiteSpace($issue)) { "—" } else { $issue }
+    }
+}
+
 function Reset-RAMRepairSession {
     Clear-RAMRepairChecklist
+
+    Set-RAMRepairFieldValue -ControlName "WPFRAMRepairCustomer" -Value ""
+    Set-RAMRepairFieldValue -ControlName "WPFRAMRepairPhone" -Value ""
+    Set-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice" -Value ""
+    Set-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories" -Value ""
+    Set-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue" -Value ""
 
     if ($sync.WPFRAMRepairNotes) {
         $sync.WPFRAMRepairNotes.Text = ""
     }
 
     Set-RAMRepairStatus -Status "Not Started"
+    Update-RAMRepairSummary
 }
 
 function Save-RAMRepairSession {
     try {
-        $documentsPath = [Environment]::GetFolderPath("MyDocuments")
-        $saveRoot = Join-Path $documentsPath "RAM Tech Utility"
-        $saveFolder = Join-Path $saveRoot "RepairSessions"
-
-        if (-not (Test-Path $saveRoot)) {
-            New-Item -Path $saveRoot -ItemType Directory -Force | Out-Null
-        }
-
-        if (-not (Test-Path $saveFolder)) {
-            New-Item -Path $saveFolder -ItemType Directory -Force | Out-Null
-        }
+        $desktopPath = [Environment]::GetFolderPath("Desktop")
 
         $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-        $savePath = Join-Path $saveFolder "repair-session-$timestamp.json"
-
-        $sessionData = [ordered]@{
-            savedAt = (Get-Date).ToString("s")
-            status = Get-RAMRepairSelectedStatus
-            notes = if ($sync.WPFRAMRepairNotes) { $sync.WPFRAMRepairNotes.Text } else { "" }
-            checklist = [ordered]@{
-                intakeCompleted = if ($sync.WPFRAMRepairChecklistIntake) { [bool]$sync.WPFRAMRepairChecklistIntake.IsChecked } else { $false }
-                backupConfirmed = if ($sync.WPFRAMRepairChecklistBackup) { [bool]$sync.WPFRAMRepairChecklistBackup.IsChecked } else { $false }
-                diagnosticsRun = if ($sync.WPFRAMRepairChecklistDiag) { [bool]$sync.WPFRAMRepairChecklistDiag.IsChecked } else { $false }
-                repairCompleted = if ($sync.WPFRAMRepairChecklistDone) { [bool]$sync.WPFRAMRepairChecklistDone.IsChecked } else { $false }
-                qcPassed = if ($sync.WPFRAMRepairChecklistQC) { [bool]$sync.WPFRAMRepairChecklistQC.IsChecked } else { $false }
-                readyForPickup = if ($sync.WPFRAMRepairChecklistPickup) { [bool]$sync.WPFRAMRepairChecklistPickup.IsChecked } else { $false }
-            }
+        $customerSlug = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairCustomer"
+        if ([string]::IsNullOrWhiteSpace($customerSlug)) {
+            $customerSlug = "walk-in"
+        }
+        $customerSlug = ($customerSlug -replace '[^a-zA-Z0-9\- ]', '').Trim() -replace '\s+', '-'
+        if ([string]::IsNullOrWhiteSpace($customerSlug)) {
+            $customerSlug = "walk-in"
         }
 
-        $sessionData | ConvertTo-Json -Depth 5 | Set-Content -Path $savePath -Encoding UTF8
+        $savePath = Join-Path $desktopPath ("repair-session-{0}-{1}.txt" -f $customerSlug.ToLower(), $timestamp)
+
+        $customer = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairCustomer"
+        $phone = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairPhone"
+        $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
+        $accessories = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories"
+        $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
+        $status = Get-RAMRepairSelectedStatus
+        $notes = if ($sync.WPFRAMRepairNotes) { $sync.WPFRAMRepairNotes.Text } else { "" }
+
+        $sessionText = @(
+            "RAM'S COMPUTER REPAIR",
+            "Repair Session",
+            "Saved: $(Get-Date -Format 'yyyy-MM-dd hh:mm:ss tt')",
+            "",
+            "Customer: $customer",
+            "Phone / Contact: $phone",
+            "Device: $device",
+            "Accessories: $accessories",
+            "Issue Reported: $issue",
+            "Status: $status",
+            "",
+            "Checklist:",
+            "- Intake completed: $(Get-RAMRepairCheckboxValue -ControlName 'WPFRAMRepairChecklistIntake')",
+            "- Backup advised / confirmed: $(Get-RAMRepairCheckboxValue -ControlName 'WPFRAMRepairChecklistBackup')",
+            "- Diagnostics run: $(Get-RAMRepairCheckboxValue -ControlName 'WPFRAMRepairChecklistDiag')",
+            "- Repair completed: $(Get-RAMRepairCheckboxValue -ControlName 'WPFRAMRepairChecklistDone')",
+            "- QC passed: $(Get-RAMRepairCheckboxValue -ControlName 'WPFRAMRepairChecklistQC')",
+            "- Ready for pickup: $(Get-RAMRepairCheckboxValue -ControlName 'WPFRAMRepairChecklistPickup')",
+            "",
+            "Technician Notes:",
+            $(if ([string]::IsNullOrWhiteSpace($notes)) { "(none)" } else { $notes })
+        ) -join [Environment]::NewLine
+
+        Set-Content -LiteralPath $savePath -Value $sessionText -Encoding UTF8
+        Update-RAMRepairSummary
 
         [System.Windows.MessageBox]::Show(
             "Repair session saved to:`n$savePath",
@@ -296,28 +381,66 @@ function Save-RAMRepairSession {
     }
 }
 
+if ($sync.WPFRAMRepairCustomer) {
+    $sync.WPFRAMRepairCustomer.Add_TextChanged({
+        Update-RAMRepairSummary
+    })
+}
+
+if ($sync.WPFRAMRepairDevice) {
+    $sync.WPFRAMRepairDevice.Add_TextChanged({
+        Update-RAMRepairSummary
+    })
+}
+
+if ($sync.WPFRAMRepairIssue) {
+    $sync.WPFRAMRepairIssue.Add_TextChanged({
+        Update-RAMRepairSummary
+    })
+}
+
+if ($sync.WPFRAMRepairStatusCombo) {
+    $sync.WPFRAMRepairStatusCombo.Add_SelectionChanged({
+        Update-RAMRepairSummary
+    })
+}
+
 if ($sync.WPFRAMRepairNewIntake) {
     $sync.WPFRAMRepairNewIntake.Add_Click({
-        Reset-RAMRepairSession
+        Clear-RAMRepairChecklist
+
+        if ($sync.WPFRAMRepairNotes) {
+            $sync.WPFRAMRepairNotes.Text = ""
+        }
+
         Set-RAMRepairStatus -Status "In Intake"
 
         if ($sync.WPFRAMRepairChecklistIntake) {
             $sync.WPFRAMRepairChecklistIntake.IsChecked = $true
         }
 
+        $openedAt = Get-Date -Format "yyyy-MM-dd hh:mm tt"
+        $customer = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairCustomer"
+        $phone = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairPhone"
+        $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
+        $accessories = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories"
+        $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
+
         $sync.WPFRAMRepairNotes.Text = @"
 [NEW REPAIR INTAKE]
-Repair opened: $(Get-Date -Format "yyyy-MM-dd hh:mm tt")
-Customer:
-Device:
-Issue Reported:
-Accessories Received:
+Repair opened: $openedAt
+Customer: $customer
+Phone / Contact: $phone
+Device: $device
+Accessories Received: $accessories
+Issue Reported: $issue
 Initial Notes:
-"@
+"@.Trim()
 
         $sync.WPFRAMRepairNotes.CaretIndex = $sync.WPFRAMRepairNotes.Text.Length
         $sync.WPFRAMRepairNotes.ScrollToEnd()
         $sync.WPFRAMRepairNotes.Focus()
+        Update-RAMRepairSummary
     })
 }
 
@@ -331,7 +454,8 @@ if ($sync.WPFRAMRepairMalware) {
 - AV alerts:
 - Tools used:
 - Outcome:
-"@
+"@.Trim()
+        Update-RAMRepairSummary
     })
 }
 
@@ -346,7 +470,8 @@ if ($sync.WPFRAMRepairTuneup) {
 - Drive space:
 - RAM usage:
 - Result:
-"@
+"@.Trim()
+        Update-RAMRepairSummary
     })
 }
 
@@ -361,7 +486,8 @@ if ($sync.WPFRAMRepairWindowsFix) {
 - SFC run:
 - DISM run:
 - Result:
-"@
+"@.Trim()
+        Update-RAMRepairSummary
     })
 }
 
