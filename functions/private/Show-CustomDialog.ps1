@@ -238,11 +238,6 @@ function Show-CustomDialog {
         $messageTextBlock.Inlines.Add((New-Object Windows.Documents.Run($textAfter)))
     }
 
-    # If no matches, add the entire message as a run
-    if ($regex.Matches($Message).Count -eq 0) {
-        $messageTextBlock.Inlines.Add((New-Object Windows.Documents.Run($Message)))
-    }
-
     # Create a ScrollViewer if EnableScroll is true
     if ($EnableScroll) {
         $scrollViewer = New-Object System.Windows.Controls.ScrollViewer
