@@ -1721,11 +1721,46 @@
 
                                     <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,8">
                                         <StackPanel>
-                                            <TextBlock FontWeight="Bold" Foreground="{DynamicResource MainForegroundColor}" Text="Customer Intake"/>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
 
-                                            <Grid Margin="0,8,0,0">
+                                                <TextBlock Grid.Column="0"
+                                                           FontWeight="Bold"
+                                                           Foreground="{DynamicResource MainForegroundColor}"
+                                                           VerticalAlignment="Center"
+                                                           Text="Customer Intake"/>
+
+                                                <Button Name="WPFRAMRepairNewIntake"
+                                                        Grid.Column="1"
+                                                        Content="New Intake"
+                                                        Width="120"
+                                                        Height="30"
+                                                        Margin="8,0,8,0"
+                                                        HorizontalContentAlignment="Center"/>
+
+                                                <Button Name="WPFRAMRepairSaveSession"
+                                                        Grid.Column="2"
+                                                        Content="Save Session"
+                                                        Width="128"
+                                                        Height="30"
+                                                        Margin="0,0,8,0"
+                                                        HorizontalContentAlignment="Center"/>
+
+                                                <Button Name="WPFRAMRepairClearSession"
+                                                        Grid.Column="3"
+                                                        Content="Clear"
+                                                        Width="88"
+                                                        Height="30"
+                                                        HorizontalContentAlignment="Center"/>
+                                            </Grid>
+
+                                            <Grid Margin="0,0,0,0">
                                                 <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="Auto"/>
@@ -1768,22 +1803,13 @@
                                                     <TextBox Name="WPFRAMRepairAccessories" Grid.Column="3" Padding="6" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
                                                 </Grid>
 
-                                                <Grid Grid.Row="3" Margin="0,0,0,8">
+                                                <Grid Grid.Row="3" Margin="0,0,0,0">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="84"/>
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Issue"/>
                                                     <TextBox Name="WPFRAMRepairIssue" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
-                                                </Grid>                                                <Grid Grid.Row="4" HorizontalAlignment="Left">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="128"/>
-                                                        <ColumnDefinition Width="136"/>
-                                                        <ColumnDefinition Width="96"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <Button Name="WPFRAMRepairNewIntake" Grid.Column="0" Content="New Intake" Width="120" Margin="0,0,8,0" Height="30" HorizontalContentAlignment="Center"/>
-                                                    <Button Name="WPFRAMRepairSaveSession" Grid.Column="1" Content="Save Session" Width="128" Margin="0,0,8,0" Height="30" HorizontalContentAlignment="Center"/>
-                                                    <Button Name="WPFRAMRepairClearSession" Grid.Column="2" Content="Clear" Width="88" Height="30" HorizontalContentAlignment="Center"/>
                                                 </Grid>
                                             </Grid>
                                         </StackPanel>
