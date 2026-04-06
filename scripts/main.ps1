@@ -386,7 +386,6 @@ function Update-RAMRepairSummary {
     $phone = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairPhone"
     $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
     $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
-    $initialFindings = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings"
     $status = Get-RAMRepairSelectedStatus
     $checklistSummary = Get-RAMRepairChecklistSummary
 
@@ -414,10 +413,6 @@ function Update-RAMRepairSummary {
         $sync.WPFRAMRepairSummaryIssue.Text = if ([string]::IsNullOrWhiteSpace($issue)) { "—" } else { $issue }
     }
 
-    if ($sync.WPFRAMRepairSummaryInitialFindings) {
-        $sync.WPFRAMRepairSummaryInitialFindings.Text = if ([string]::IsNullOrWhiteSpace($initialFindings)) { "—" } else { $initialFindings }
-    }
-
     if ($sync.WPFRAMRepairSummaryChecklist) {
         $sync.WPFRAMRepairSummaryChecklist.Text = $checklistSummary
     }
@@ -436,7 +431,6 @@ function Reset-RAMRepairSession {
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice" -Value ""
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories" -Value ""
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue" -Value ""
-    Set-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings" -Value ""
 
     if ($sync.WPFRAMRepairNotes) {
         $sync.WPFRAMRepairNotes.Text = ""
@@ -483,7 +477,6 @@ function Save-RAMRepairSession {
         $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
         $accessories = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories"
         $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
-        $initialFindings = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings"
         $status = Get-RAMRepairSelectedStatus
         $notes = if ($sync.WPFRAMRepairNotes) { $sync.WPFRAMRepairNotes.Text } else { "" }
 
@@ -498,7 +491,6 @@ function Save-RAMRepairSession {
             "Device: $device",
             "Accessories: $accessories",
             "Issue Reported: $issue",
-            "Initial Findings: $initialFindings",
             "Status: $status",
             "",
             "Checklist:",
@@ -569,12 +561,6 @@ if ($sync.WPFRAMRepairIssue) {
     })
 }
 
-if ($sync.WPFRAMRepairInitialFindings) {
-    $sync.WPFRAMRepairInitialFindings.Add_TextChanged({
-        Update-RAMRepairSummary
-    })
-}
-
 if ($sync.WPFRAMRepairStatusCombo) {
     $sync.WPFRAMRepairStatusCombo.Add_SelectionChanged({
         Update-RAMRepairSummary
@@ -617,7 +603,6 @@ if ($sync.WPFRAMRepairNewIntake) {
         $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
         $accessories = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories"
         $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
-        $initialFindings = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings"
 
         $sync.WPFRAMRepairNotes.Text = @"
 [NEW REPAIR INTAKE]
@@ -628,7 +613,6 @@ Phone / Contact: $phone
 Device: $device
 Accessories Received: $accessories
 Issue Reported: $issue
-Initial Findings: $initialFindings
 Initial Notes:
 "@.Trim()
 

@@ -9,7 +9,8 @@ param (
     [string]$Config,
     [switch]$Run,
     [switch]$Noui,
-    [switch]$Offline
+    [switch]$Offline,
+    [switch]$ClearCachedData
 )
 
 if ($Config) {
@@ -29,6 +30,11 @@ if ($Noui) {
 $PARAM_OFFLINE = $false
 if ($Offline) {
     $PARAM_OFFLINE = $true
+}
+
+$PARAM_CLEARCACHEDDATA = $false
+if ($ClearCachedData) {
+    $PARAM_CLEARCACHEDDATA = $true
 }
 
 if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -69,6 +75,44 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName System.Windows.Forms
 
+
+function Clear-RAMLocalCache {
+    param(
+        [string]$CacheRoot,
+        [switch]$CloseAfterClear
+    )
+
+    if ([string]::IsNullOrWhiteSpace($CacheRoot)) { return $false }
+
+    try {
+        if (Test-Path $CacheRoot) {
+            Remove-Item -Path $CacheRoot -Recurse -Force -ErrorAction SilentlyContinue
+        }
+
+        [System.Windows.MessageBox]::Show(
+            "Cached local RAM Tech Utility data has been cleared.`n`nReopen from the website launcher or the newest package to pull the latest version.",
+            "RAM Tech Utility",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        ) | Out-Null
+
+        if ($CloseAfterClear -and $sync.ContainsKey('Form') -and $sync['Form']) {
+            $sync['Form'].Close()
+        }
+
+        return $true
+    }
+    catch {
+        [System.Windows.MessageBox]::Show(
+            "Could not clear cached data.`n`n$($_.Exception.Message)",
+            "RAM Tech Utility",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Error
+        ) | Out-Null
+        return $false
+    }
+}
+
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
 $sync.PSScriptRoot = $PSScriptRoot
@@ -82,6 +126,7 @@ $sync.selectedTweaks = [System.Collections.Generic.List[string]]::new()
 $sync.selectedToggles = [System.Collections.Generic.List[string]]::new()
 $sync.selectedFeatures = [System.Collections.Generic.List[string]]::new()
 $sync.currentTab = "Install"
+$sync.cacheRoot = Join-Path $env:LOCALAPPDATA 'RAM-Tech-Utility'
 $sync.selectedAppsStackPanel
 $sync.selectedAppsPopup
 
@@ -89,6 +134,11 @@ $dateTime = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 
 # Set the path for the RAM Tech Utility directory
 $winutildir = "$env:LocalAppData\RAM-Tech-Utility"
+if ($PARAM_CLEARCACHEDDATA) {
+    Clear-RAMLocalCache -CacheRoot $sync.cacheRoot | Out-Null
+    exit
+}
+
 New-Item $winutildir -ItemType Directory -Force | Out-Null
 
 $logdir = "$winutildir\logs"

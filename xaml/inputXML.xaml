@@ -1195,6 +1195,12 @@
                                 </MenuItem.ToolTip>
                             </MenuItem>
                             <Separator/>
+                            <MenuItem FontSize="{DynamicResource ButtonFontSize}" Header="Clear Local Cache" Name="ClearLocalCacheMenuItem" Foreground="{DynamicResource MainForegroundColor}">
+                                <MenuItem.ToolTip>
+                                    <ToolTip Content="Remove cached local install data so the next launch pulls the newest version."/>
+                                </MenuItem.ToolTip>
+                            </MenuItem>
+                            <Separator/>
                             <MenuItem FontSize="{DynamicResource ButtonFontSize}" Header="About" Name="AboutMenuItem" Foreground="{DynamicResource MainForegroundColor}"/>
                             <MenuItem FontSize="{DynamicResource ButtonFontSize}" Header="Project Files" Name="DocumentationMenuItem" Foreground="{DynamicResource MainForegroundColor}"/>
                             <MenuItem FontSize="{DynamicResource ButtonFontSize}" Header="Credits" Name="SponsorMenuItem" Foreground="{DynamicResource MainForegroundColor}"/>
@@ -1804,28 +1810,12 @@
                                                 </Grid>
 
                                                 <Grid Grid.Row="3" Margin="0,0,0,0">
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                    </Grid.RowDefinitions>
-
-                                                    <Grid Grid.Row="0" Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="84"/>
-                                                            <ColumnDefinition Width="*"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Reported"/>
-                                                        <TextBox Name="WPFRAMRepairIssue" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
-                                                    </Grid>
-
-                                                    <Grid Grid.Row="1" Margin="0,0,0,0">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="84"/>
-                                                            <ColumnDefinition Width="*"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Findings"/>
-                                                        <TextBox Name="WPFRAMRepairInitialFindings" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
-                                                    </Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="84"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Issue"/>
+                                                    <TextBox Name="WPFRAMRepairIssue" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
                                                 </Grid>
                                             </Grid>
                                         </StackPanel>
@@ -1948,7 +1938,6 @@
                             <TextBlock Name="WPFRAMRepairSummaryStatus" Text="Not Started"/>
                             <TextBlock Name="WPFRAMRepairSummaryChecklist" Text="0/6 completed"/>
                             <TextBlock Name="WPFRAMRepairSummaryIssue" Text="?"/>
-                            <TextBlock Name="WPFRAMRepairSummaryInitialFindings" Text="?"/>
                             <TextBlock Name="WPFRAMRepairSummaryLastSave" Text="Not saved yet"/>
                         </Grid>
                     </Grid>

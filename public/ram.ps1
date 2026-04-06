@@ -11,8 +11,10 @@
 [CmdletBinding()]
 param(
     [string]$ReleaseZipUrl = "https://github.com/RAMeow/RAMS-Tech-Util/archive/refs/heads/main.zip",
+    [string]$ReleaseVersionUrl = "https://raw.githubusercontent.com/RAMeow/RAMS-Tech-Util/main/version.txt",
     [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA "RAM-Tech-Utility"),
-    [switch]$ForceRedownload
+    [switch]$ForceRedownload,
+    [switch]$ClearCachedData
 )
 
 $ErrorActionPreference = 'Stop'
@@ -72,11 +74,16 @@ function Restart-Elevated {
         '-ExecutionPolicy', 'Bypass'
         '-File', ('"{0}"' -f $ScriptPath)
         '-ReleaseZipUrl', ('"{0}"' -f $ReleaseZipUrl)
+        '-ReleaseVersionUrl', ('"{0}"' -f $ReleaseVersionUrl)
         '-InstallRoot', ('"{0}"' -f $InstallRoot)
     )
 
     if ($ForceRedownload) {
         $argList += '-ForceRedownload'
+    }
+
+    if ($ClearCachedData) {
+        $argList += '-ClearCachedData'
     }
 
     Write-RAMStatus "Requesting Administrator elevation..."
@@ -107,6 +114,56 @@ function Get-LauncherPath {
     }
 
     return $null
+}
+
+
+function Get-RemoteVersion {
+    param([string]$Url)
+
+    if ([string]::IsNullOrWhiteSpace($Url)) { return $null }
+
+    try {
+        $response = Invoke-WebRequest -Uri $Url -UseBasicParsing
+        $value = [string]$response.Content
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            return $value.Trim()
+        }
+    }
+    catch {
+        Write-RAMStatus " Unable to read remote version marker. Continuing with launcher checks only."
+    }
+
+    return $null
+}
+
+function Get-InstalledVersion {
+    param([string]$Root)
+
+    $versionFile = Get-ChildItem -Path $Root -Filter 'version.txt' -Recurse -File -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+
+    if (-not $versionFile) { return $null }
+
+    try {
+        $value = Get-Content -Path $versionFile.FullName -Raw -ErrorAction Stop
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            return $value.Trim()
+        }
+    }
+    catch {}
+
+    return $null
+}
+
+function Clear-InstallRoot {
+    param([string]$Root)
+
+    if (Test-Path $Root) {
+        Write-RAMStatus " Clearing cached local install data..."
+        Remove-Item -Path $Root -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    New-Item -Path $Root -ItemType Directory -Force | Out-Null
 }
 
 function Invoke-Download {
@@ -170,14 +227,28 @@ try {
     New-Item -Path $InstallRoot -ItemType Directory -Force | Out-Null
 
     $launcherPath = Get-LauncherPath -Root $InstallRoot
+    $installedVersion = Get-InstalledVersion -Root $InstallRoot
+    $remoteVersion = Get-RemoteVersion -Url $ReleaseVersionUrl
+    $shouldRefresh = $ForceRedownload -or $ClearCachedData -or -not $launcherPath
 
-    if ($ForceRedownload -or -not $launcherPath) {
+    if (-not $shouldRefresh -and $remoteVersion -and $installedVersion -and ($remoteVersion -ne $installedVersion)) {
+        Write-RAMStatus " Version change detected ($installedVersion -> $remoteVersion). Refreshing local install."
+        $shouldRefresh = $true
+    }
+
+    if ($shouldRefresh) {
+        Clear-InstallRoot -Root $InstallRoot
         Invoke-Download -Url $ReleaseZipUrl -Destination $tempZip
         Expand-Package -ZipPath $tempZip -Destination $InstallRoot
         $launcherPath = Get-LauncherPath -Root $InstallRoot
     }
     else {
-        Write-RAMStatus "Existing install found. Using local copy."
+        if ($installedVersion) {
+            Write-RAMStatus " Existing install found. Using local copy ($installedVersion)."
+        }
+        else {
+            Write-RAMStatus " Existing install found. Using local copy."
+        }
     }
 
     if (-not $launcherPath) {
