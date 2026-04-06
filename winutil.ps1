@@ -2,7 +2,7 @@
 .NOTES
     Author         : RAM Tech Utility
     Project        : RAM Tech Utility
-    Version        : 26.04.05.16
+    Version        : 26.04.06.00
 #>
 
 param (
@@ -72,7 +72,7 @@ Add-Type -AssemblyName System.Windows.Forms
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
 $sync.PSScriptRoot = $PSScriptRoot
-$sync.version = "26.04.05.16"
+$sync.version = "26.04.06.00"
 $sync.configs = @{}
 $sync.Buttons = [System.Collections.Generic.List[PSObject]]::new()
 $sync.preferences = @{}
@@ -4473,11 +4473,6 @@ function Show-CustomDialog {
     if ($lastPos -lt $Message.Length) {
         $textAfter = $Message.Substring($lastPos)
         $messageTextBlock.Inlines.Add((New-Object Windows.Documents.Run($textAfter)))
-    }
-
-    # If no matches, add the entire message as a run
-    if ($regex.Matches($Message).Count -eq 0) {
-        $messageTextBlock.Inlines.Add((New-Object Windows.Documents.Run($Message)))
     }
 
     # Create a ScrollViewer if EnableScroll is true
@@ -14023,41 +14018,48 @@ $inputXML = @'
         </Style>
         <!-- Button Template -->
         <Style TargetType="Button">
-            <Setter Property="Margin" Value="{DynamicResource ButtonMargin}"/>
-            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundColor}"/>
-            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundColor}"/>
-            <Setter Property="Height" Value="{DynamicResource ButtonHeight}"/>
-            <Setter Property="Width" Value="{DynamicResource ButtonWidth}"/>
-            <Setter Property="FontSize" Value="{DynamicResource ButtonFontSize}"/>
-            <Setter Property="FontFamily" Value="{DynamicResource FontFamily}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid>
-                            <Border x:Name="BackgroundBorder"
-                                    Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{DynamicResource ButtonBorderThickness}"
-                                    CornerRadius="{DynamicResource ButtonCornerRadius}">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,2,10,2"/>
-                            </Border>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="BackgroundBorder" Property="Background" Value="{DynamicResource ButtonBackgroundPressedColor}"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="BackgroundBorder" Property="Background" Value="{DynamicResource ButtonBackgroundMouseoverColor}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="BackgroundBorder" Property="Background" Value="{DynamicResource ButtonBackgroundSelectedColor}"/>
-                                <Setter Property="Foreground" Value="DimGray"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+    <Setter Property="Margin" Value="{DynamicResource ButtonMargin}"/>
+    <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundColor}"/>
+    <Setter Property="Background" Value="{DynamicResource ButtonBackgroundColor}"/>
+    <Setter Property="Height" Value="{DynamicResource ButtonHeight}"/>
+    <Setter Property="Width" Value="{DynamicResource ButtonWidth}"/>
+    <Setter Property="FontSize" Value="{DynamicResource ButtonFontSize}"/>
+    <Setter Property="FontFamily" Value="{DynamicResource FontFamily}"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="Button">
+                <Border x:Name="BackgroundBorder"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{DynamicResource ButtonBorderThickness}"
+                        CornerRadius="{DynamicResource ButtonCornerRadius}"
+                        SnapsToDevicePixels="True">
+                    <Grid>
+                        <TextBlock Text="{TemplateBinding Content}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   TextAlignment="Center"/>
+                    </Grid>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter TargetName="BackgroundBorder" Property="Background" Value="{DynamicResource ButtonBackgroundPressedColor}"/>
+                    </Trigger>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="BackgroundBorder" Property="Background" Value="{DynamicResource ButtonBackgroundMouseoverColor}"/>
+                    </Trigger>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter TargetName="BackgroundBorder" Property="Background" Value="{DynamicResource ButtonBackgroundSelectedColor}"/>
+                        <Setter Property="Foreground" Value="DimGray"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
 
         <Style x:Key="ToggleButtonStyle" TargetType="ToggleButton">
             <Setter Property="Margin" Value="{DynamicResource ButtonMargin}"/>
@@ -15035,7 +15037,7 @@ $inputXML = @'
                                         </Grid.ColumnDefinitions>
                                         <TextBox Grid.Column="0"
                                                  Name="WPFWin11ISOPath"
-                                                 IsReadOnly="True"
+
                                                  VerticalAlignment="Center"
                                                  Padding="6,4"
                                                  Margin="0,0,6,0"
@@ -15292,7 +15294,7 @@ $inputXML = @'
                         </TextBlock>
                         <TextBox Grid.Row="1"
                                  Name="WPFWin11ISOStatusLog"
-                                 IsReadOnly="True"
+
                                  TextWrapping="Wrap"
                                  VerticalScrollBarVisibility="Visible"
                                  VerticalAlignment="Stretch"
@@ -15312,316 +15314,215 @@ $inputXML = @'
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <Border Grid.Row="0" Style="{StaticResource BorderStyle}">
+                        <Border Grid.Row="0" Style="{StaticResource BorderStyle}" Width="860" HorizontalAlignment="Left">
                             <StackPanel Margin="10">
                                 <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource MainForegroundColor}" Text="RAM Tools Dashboard"/>
-                                <TextBlock Margin="0,10,0,8" TextWrapping="Wrap" Foreground="{DynamicResource MainForegroundColor}">
-                                    RAM-specific tools and workflow presets now sit in the same navigation flow as the rest of the utility. Use the quick links below or search within this tab to jump to what you need.
-                                </TextBlock>
-                                <WrapPanel Margin="0,6,0,0" Orientation="Horizontal" ItemWidth="230" ItemHeight="48">
-                                    <Button Name="WPFRAMGoInstall" Content="Go to Install" Margin="4" Width="220" Height="40" MinHeight="40" Padding="12,5" HorizontalAlignment="Left"/>
-                                    <Button Name="WPFRAMGoTweaks" Content="Go to Tweaks" Margin="4" Width="220" Height="40" MinHeight="40" Padding="12,5" HorizontalAlignment="Left"/>
-                                    <Button Name="WPFRAMGoConfig" Content="Go to Config" Margin="4" Width="220" Height="40" MinHeight="40" Padding="12,5" HorizontalAlignment="Left"/>
-                                    <Button Name="WPFRAMGoUpdates" Content="Go to Updates" Margin="4" Width="220" Height="40" MinHeight="40" Padding="12,5" HorizontalAlignment="Left"/>
-                                    <Button Name="WPFRAMGoWin11" Content="Go to Win11 Creator" Margin="4" Width="220" Height="40" MinHeight="40" Padding="14,5" HorizontalAlignment="Left" ToolTip="Go to Win11 Creator"/>
-                                </WrapPanel>
+                                <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource MainForegroundColor}" Text="Focused repair workflow for intake, repair steps, notes, and technician tools."/>
                             </StackPanel>
                         </Border>
 
-                        <Grid Grid.Row="1" Margin="0,10,0,0">
+                        <Grid Grid.Row="1" Margin="0,8,0,0" Width="860" HorizontalAlignment="Left">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2.2*"/>
-                                <ColumnDefinition Width="1.15*"/>
+                                <ColumnDefinition Width="560"/>
+                                <ColumnDefinition Width="280"/>
                             </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Column="0">
-                                <Border Name="WPFRAMRepairsCard" Style="{StaticResource BorderStyle}" Margin="0,0,10,10">
-                                    <StackPanel Margin="12">
-                                        <TextBlock FontWeight="Bold" FontSize="18" Foreground="{DynamicResource MainForegroundColor}" Text="Repairs"/>
-                                        <TextBlock Margin="0,8,0,12" TextWrapping="Wrap" Foreground="{DynamicResource MainForegroundColor}">
-                                            Launch repair workflows, intake actions, and technician notes from one place.
-                                        </TextBlock>
+                            <Border Name="WPFRAMRepairsCard" Grid.Column="0" Style="{StaticResource BorderStyle}" Margin="0,0,10,0">
+                                <StackPanel Margin="10">
+                                    <TextBlock FontWeight="Bold" FontSize="18" Foreground="{DynamicResource MainForegroundColor}" Text="Repairs"/>
+                                    <TextBlock Margin="0,4,0,8" TextWrapping="Wrap" Foreground="{DynamicResource MainForegroundColor}" Text="Compact intake, repair actions, completion, and notes."/>
 
-                                        <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
-                                            <StackPanel>
-                                                <TextBlock FontWeight="Bold" Foreground="{DynamicResource MainForegroundColor}" Text="Customer Intake"/>
-                                                <Grid Margin="0,10,0,0">
+                                    <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock FontWeight="Bold" Foreground="{DynamicResource MainForegroundColor}" Text="Customer Intake"/>
+
+                                            <Grid Margin="0,8,0,0">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <Grid Grid.Row="0" Margin="0,0,0,6">
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="150"/>
+                                                        <ColumnDefinition Width="84"/>
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                    </Grid.RowDefinitions>
-
-                                                    <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,10,8" VerticalAlignment="Center" Foreground="{DynamicResource MainForegroundColor}" Text="Customer"/>
-                                                    <TextBox Name="WPFRAMRepairCustomer" Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" Padding="8"
-                                                             Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}"
-                                                             BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
-
-                                                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,10,8" VerticalAlignment="Center" Foreground="{DynamicResource MainForegroundColor}" Text="Phone / Contact"/>
-                                                    <TextBox Name="WPFRAMRepairPhone" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" Padding="8"
-                                                             Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}"
-                                                             BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
-
-                                                    <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,10,8" VerticalAlignment="Center" Foreground="{DynamicResource MainForegroundColor}" Text="Device"/>
-                                                    <TextBox Name="WPFRAMRepairDevice" Grid.Row="2" Grid.Column="1" Margin="0,0,0,8" Padding="8"
-                                                             Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}"
-                                                             BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
-
-                                                    <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,0,10,8" VerticalAlignment="Center" Foreground="{DynamicResource MainForegroundColor}" Text="Accessories"/>
-                                                    <TextBox Name="WPFRAMRepairAccessories" Grid.Row="3" Grid.Column="1" Margin="0,0,0,8" Padding="8"
-                                                             Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}"
-                                                             BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
-
-                                                    <TextBlock Grid.Row="4" Grid.Column="0" Margin="0,0,10,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Issue Reported"/>
-                                                    <TextBox Name="WPFRAMRepairIssue" Grid.Row="4" Grid.Column="1" Padding="8" Height="70"
-                                                             AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
-                                                             Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}"
-                                                             BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
+                                                    <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource MainForegroundColor}" Text="Ticket #"/>
+                                                    <TextBox Name="WPFRAMRepairTicketId" Grid.Column="1" Padding="6" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
+                                                    <Button Name="WPFRAMGenerateTicketId" Visibility="Collapsed" Width="0" Height="0" Padding="0" Margin="0" Content="Generate"/>
                                                 </Grid>
-                                            </StackPanel>
-                                        </Border>
 
-                                        <Grid Margin="0,0,0,10">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="1.3*"/>
-                                                <ColumnDefinition Width="1*"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <Border Grid.Column="0"
-                                                    BorderBrush="{DynamicResource BorderColor}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="6"
-                                                    Padding="10"
-                                                    Margin="0,0,10,0">
-                                                <StackPanel>
-                                                    <TextBlock FontWeight="Bold"
-                                                               Foreground="{DynamicResource MainForegroundColor}"
-                                                               Text="Quick Repair Actions"/>
-
-                                                    <WrapPanel Margin="0,10,0,0" ItemWidth="180" ItemHeight="42">
-                                                        <Button Name="WPFRAMRepairNewIntake"
-                                                                Content="New Intake"
-                                                                Margin="4"
-                                                                Width="170"
-                                                                Height="34"
-                                                                Padding="10,4"/>
-
-                                                        <Button Name="WPFRAMRepairMalware"
-                                                                Content="Malware Cleanup"
-                                                                Margin="4"
-                                                                Width="170"
-                                                                Height="34"
-                                                                Padding="10,4"/>
-
-                                                        <Button Name="WPFRAMRepairTuneup"
-                                                                Content="Performance Tune-Up"
-                                                                Margin="4"
-                                                                Width="170"
-                                                                Height="34"
-                                                                Padding="10,4"/>
-
-                                                        <Button Name="WPFRAMRepairWindowsFix"
-                                                                Content="Windows Repair"
-                                                                Margin="4"
-                                                                Width="170"
-                                                                Height="34"
-                                                                Padding="10,4"/>
-
-                                                        <Button Name="WPFRAMRepairBackup"
-                                                                Content="Backup / Data Copy"
-                                                                Margin="4"
-                                                                Width="170"
-                                                                Height="34"
-                                                                Padding="10,4"/>
-
-                                                        <Button Name="WPFRAMRepairPassword"
-                                                                Content="Password / Account Help"
-                                                                Margin="4"
-                                                                Width="170"
-                                                                Height="34"
-                                                                Padding="10,4"/>
-                                                    </WrapPanel>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <Border Grid.Column="1"
-                                                    BorderBrush="{DynamicResource BorderColor}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="6"
-                                                    Padding="10">
-                                                <StackPanel>
-                                                    <TextBlock FontWeight="Bold"
-                                                               Foreground="{DynamicResource MainForegroundColor}"
-                                                               Text="Repair Checklist"/>
-
-                                                    <CheckBox Name="WPFRAMRepairChecklistIntake"
-                                                              Content="Intake completed"
-                                                              Margin="0,10,0,4"
-                                                              Foreground="{DynamicResource MainForegroundColor}"/>
-
-                                                    <CheckBox Name="WPFRAMRepairChecklistBackup"
-                                                              Content="Backup advised / confirmed"
-                                                              Margin="0,4,0,4"
-                                                              Foreground="{DynamicResource MainForegroundColor}"/>
-
-                                                    <CheckBox Name="WPFRAMRepairChecklistDiag"
-                                                              Content="Diagnostics run"
-                                                              Margin="0,4,0,4"
-                                                              Foreground="{DynamicResource MainForegroundColor}"/>
-
-                                                    <CheckBox Name="WPFRAMRepairChecklistDone"
-                                                              Content="Repair completed"
-                                                              Margin="0,4,0,4"
-                                                              Foreground="{DynamicResource MainForegroundColor}"/>
-
-                                                    <CheckBox Name="WPFRAMRepairChecklistQC"
-                                                              Content="QC passed"
-                                                              Margin="0,4,0,4"
-                                                              Foreground="{DynamicResource MainForegroundColor}"/>
-
-                                                    <CheckBox Name="WPFRAMRepairChecklistPickup"
-                                                              Content="Ready for pickup"
-                                                              Margin="0,4,0,0"
-                                                              Foreground="{DynamicResource MainForegroundColor}"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </Grid>
-
-                                        <Border BorderBrush="{DynamicResource BorderColor}"
-                                                BorderThickness="1"
-                                                CornerRadius="6"
-                                                Padding="10">
-                                            <StackPanel>
-                                                <TextBlock FontWeight="Bold"
-                                                           Foreground="{DynamicResource MainForegroundColor}"
-                                                           Text="Repair Status &amp; Notes"/>
-
-                                                <Grid Margin="0,10,0,8">
+                                                <Grid Grid.Row="1" Margin="0,0,0,6">
                                                     <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="84"/>
                                                         <ColumnDefinition Width="160"/>
-                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="84"/>
+                                                        <ColumnDefinition Width="160"/>
                                                     </Grid.ColumnDefinitions>
-
-                                                    <TextBlock Grid.Column="0"
-                                                               VerticalAlignment="Center"
-                                                               Foreground="{DynamicResource MainForegroundColor}"
-                                                               Text="Current Status:"/>
-
-                                                    <ComboBox Grid.Column="1"
-                                                              Name="WPFRAMRepairStatusCombo"
-                                                              SelectedIndex="0"
-                                                              Foreground="{DynamicResource MainForegroundColor}"
-                                                              Background="{DynamicResource MainBackgroundColor}">
-                                                        <ComboBoxItem Content="Not Started"/>
-                                                        <ComboBoxItem Content="In Intake"/>
-                                                        <ComboBoxItem Content="Diagnosing"/>
-                                                        <ComboBoxItem Content="Repair In Progress"/>
-                                                        <ComboBoxItem Content="Waiting on Parts"/>
-                                                        <ComboBoxItem Content="Ready for Pickup"/>
-                                                        <ComboBoxItem Content="Closed"/>
-                                                    </ComboBox>
+                                                    <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource MainForegroundColor}" Text="Customer"/>
+                                                    <TextBox Name="WPFRAMRepairCustomer" Grid.Column="1" Margin="0,0,8,0" Padding="6" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
+                                                    <TextBlock Grid.Column="2" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource MainForegroundColor}" Text="Phone"/>
+                                                    <TextBox Name="WPFRAMRepairPhone" Grid.Column="3" Padding="6" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
                                                 </Grid>
 
-                                                <TextBlock Foreground="{DynamicResource MainForegroundColor}"
-                                                           Margin="0,0,0,6"
-                                                           Text="Technician Notes"/>
+                                                <Grid Grid.Row="2" Margin="0,0,0,6">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="84"/>
+                                                        <ColumnDefinition Width="160"/>
+                                                        <ColumnDefinition Width="84"/>
+                                                        <ColumnDefinition Width="160"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource MainForegroundColor}" Text="Device"/>
+                                                    <TextBox Name="WPFRAMRepairDevice" Grid.Column="1" Margin="0,0,8,0" Padding="6" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
+                                                    <TextBlock Grid.Column="2" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource MainForegroundColor}" Text="Items"/>
+                                                    <TextBox Name="WPFRAMRepairAccessories" Grid.Column="3" Padding="6" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
+                                                </Grid>
 
-                                                <TextBox Name="WPFRAMRepairNotes"
-                                                         Height="110"
-                                                         AcceptsReturn="True"
-                                                         TextWrapping="Wrap"
-                                                         VerticalScrollBarVisibility="Auto"
-                                                         Background="{DynamicResource MainBackgroundColor}"
-                                                         Foreground="{DynamicResource MainForegroundColor}"
-                                                         BorderBrush="{DynamicResource BorderColor}"
-                                                         BorderThickness="1"
-                                                         Padding="8"
-                                                         Text=""/>
+                                                <Grid Grid.Row="3" Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="84"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Issue"/>
+                                                    <TextBox Name="WPFRAMRepairIssue" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
+                                                </Grid>                                                <Grid Grid.Row="4" HorizontalAlignment="Left">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="128"/>
+                                                        <ColumnDefinition Width="136"/>
+                                                        <ColumnDefinition Width="96"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Name="WPFRAMRepairNewIntake" Grid.Column="0" Content="New Intake" Width="120" Margin="0,0,8,0" Height="30" HorizontalContentAlignment="Center"/>
+                                                    <Button Name="WPFRAMRepairSaveSession" Grid.Column="1" Content="Save Session" Width="128" Margin="0,0,8,0" Height="30" HorizontalContentAlignment="Center"/>
+                                                    <Button Name="WPFRAMRepairClearSession" Grid.Column="2" Content="Clear" Width="88" Height="30" HorizontalContentAlignment="Center"/>
+                                                </Grid>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
 
-                                                <WrapPanel Margin="0,10,0,0" ItemWidth="180" ItemHeight="42">
-                                                    <Button Name="WPFRAMRepairSaveSession"
-                                                            Content="Save Repair Session"
-                                                            Margin="4"
-                                                            Width="170"
-                                                            Height="34"
-                                                            Padding="10,4"/>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="270"/>
+                                            <ColumnDefinition Width="270"/>
+                                        </Grid.ColumnDefinitions>
 
-                                                    <Button Name="WPFRAMRepairClearSession"
-                                                            Content="Clear Session"
-                                                            Margin="4"
-                                                            Width="170"
-                                                            Height="34"
-                                                            Padding="10,4"/>
-
-                                                    <Button Name="WPFRAMRepairsScaffold"
-                                                            Content="Open Advanced Repairs"
-                                                            Margin="4"
-                                                            Width="170"
-                                                            Height="34"
-                                                            Padding="10,4"/>
-                                                </WrapPanel>
+                                        <Border Grid.Column="0" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,8,0">
+                                            <StackPanel>
+                                                <TextBlock FontWeight="Bold" Foreground="{DynamicResource MainForegroundColor}" Text="Repair Actions"/>
+                                                <UniformGrid Columns="1" Margin="0,8,0,0" Rows="6">
+                                                    <Button Name="WPFRAMRepairMalware" Content="Malware Cleanup" Margin="0,0,0,6" Height="30" HorizontalContentAlignment="Center"/>
+                                                    <Button Name="WPFRAMRepairTuneup" Content="Performance Tune-Up" Margin="0,0,0,6" Height="30" HorizontalContentAlignment="Center"/>
+                                                    <Button Name="WPFRAMRepairWindowsFix" Content="Windows Repair" Margin="0,0,0,6" Height="30" HorizontalContentAlignment="Center"/>
+                                                    <Button Name="WPFRAMRepairBackup" Content="Backup / Data Copy" Margin="0,0,0,6" Height="30" HorizontalContentAlignment="Center"/>
+                                                    <Button Name="WPFRAMRepairPassword" Content="Password / Account Help" Margin="0,0,0,6" Height="30" HorizontalContentAlignment="Center"/>
+                                                    <Button Name="WPFRAMRepairsScaffold" Content="Advanced Repairs" Height="30" HorizontalContentAlignment="Center"/>
+                                                </UniformGrid>
                                             </StackPanel>
                                         </Border>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
+
+                                        <StackPanel Grid.Column="1">
+                                            <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,8">
+                                                <StackPanel>
+                                                    <TextBlock FontWeight="Bold" Foreground="{DynamicResource MainForegroundColor}" Text="Checklist"/>
+                                                    <UniformGrid Columns="1" Margin="0,8,0,0" Rows="6">
+                                                        <CheckBox Name="WPFRAMRepairChecklistIntake" Content="Intake completed" Margin="0,0,0,6" Foreground="{DynamicResource MainForegroundColor}"/>
+                                                        <CheckBox Name="WPFRAMRepairChecklistBackup" Content="Backup confirmed" Margin="0,0,0,6" Foreground="{DynamicResource MainForegroundColor}"/>
+                                                        <CheckBox Name="WPFRAMRepairChecklistDiag" Content="Diagnostics run" Margin="0,0,0,6" Foreground="{DynamicResource MainForegroundColor}"/>
+                                                        <CheckBox Name="WPFRAMRepairChecklistDone" Content="Repair completed" Margin="0,0,0,6" Foreground="{DynamicResource MainForegroundColor}"/>
+                                                        <CheckBox Name="WPFRAMRepairChecklistQC" Content="QC passed" Margin="0,0,0,6" Foreground="{DynamicResource MainForegroundColor}"/>
+                                                        <CheckBox Name="WPFRAMRepairChecklistPickup" Content="Ready for pickup" Foreground="{DynamicResource MainForegroundColor}"/>
+                                                    </UniformGrid>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="8">
+                                                <StackPanel>
+                                                    <TextBlock FontWeight="Bold" Foreground="{DynamicResource MainForegroundColor}" Text="Completion"/>
+                                                    <UniformGrid Columns="1" Margin="0,8,0,0" Rows="3">
+                                                        <Button Name="WPFRAMRepairMarkComplete" Content="Mark Complete" Margin="0,0,0,6" Height="30" HorizontalContentAlignment="Center"/>
+                                                        <Button Name="WPFRAMRepairMarkReadyPickup" Content="Ready for Pickup" Margin="0,0,0,6" Height="30" HorizontalContentAlignment="Center"/>
+                                                        <Button Name="WPFRAMRepairCloseTicket" Content="Close Ticket" Height="30" HorizontalContentAlignment="Center"/>
+                                                    </UniformGrid>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="8">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="90"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource MainForegroundColor}" Text="Status"/>
+                                                <ComboBox Grid.Column="1" Name="WPFRAMRepairStatusCombo" SelectedIndex="0" Foreground="{DynamicResource MainForegroundColor}" Background="{DynamicResource MainBackgroundColor}">
+                                                    <ComboBoxItem Content="Not Started"/>
+                                                    <ComboBoxItem Content="In Intake"/>
+                                                    <ComboBoxItem Content="Diagnosing"/>
+                                                    <ComboBoxItem Content="Repair In Progress"/>
+                                                    <ComboBoxItem Content="Waiting on Parts"/>
+                                                    <ComboBoxItem Content="Ready for Pickup"/>
+                                                    <ComboBoxItem Content="Closed"/>
+                                                </ComboBox>
+                                            </Grid>
+                                            <TextBlock Margin="0,0,0,6" Foreground="{DynamicResource MainForegroundColor}" Text="Technician Notes"/>
+                                            <TextBox Name="WPFRAMRepairNotes" Height="110" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Padding="8"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
 
                             <StackPanel Grid.Column="1">
-                                <Border Style="{StaticResource BorderStyle}" Margin="0,0,0,10">
-                                    <StackPanel Margin="12">
-                                        <TextBlock FontWeight="Bold" FontSize="16" Foreground="{DynamicResource MainForegroundColor}" Text="Intake Summary"/>
-                                        <TextBlock Margin="0,8,0,8" TextWrapping="Wrap" Foreground="{DynamicResource MainForegroundColor}">
-                                            This area is reserved for live intake summary, customer/device snapshot, and future session output.
-                                        </TextBlock>
-                                        <TextBlock Foreground="{DynamicResource MainForegroundColor}" Margin="0,4,0,2" Text="Customer"/>
-                                        <TextBlock Name="WPFRAMRepairSummaryCustomer" Foreground="{DynamicResource MainForegroundColor}" Opacity="0.85" Text="?"/>
-                                        <TextBlock Foreground="{DynamicResource MainForegroundColor}" Margin="0,8,0,2" Text="Device"/>
-                                        <TextBlock Name="WPFRAMRepairSummaryDevice" Foreground="{DynamicResource MainForegroundColor}" Opacity="0.85" Text="?"/>
-                                        <TextBlock Foreground="{DynamicResource MainForegroundColor}" Margin="0,8,0,2" Text="Current Status"/>
-                                        <TextBlock Name="WPFRAMRepairSummaryStatus" Foreground="{DynamicResource MainForegroundColor}" Opacity="0.85" Text="Not Started"/>
+                                <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="Bold" FontSize="16" Foreground="{DynamicResource MainForegroundColor}" Text="Activity Log"/>
+                                        <TextBox Name="WPFRAMRepairActivityLog" Margin="0,8,0,0" Height="160" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Padding="8"/>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Name="WPFRAMDiagnosticsCard" Style="{StaticResource BorderStyle}" Margin="0,0,0,10">
-                                    <StackPanel Margin="12">
+                                <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="Bold" FontSize="16" Foreground="{DynamicResource MainForegroundColor}" Text="Utilities"/>
+                                        <UniformGrid Columns="1" Margin="0,8,0,0" Rows="4">
+                                            <Button Name="WPFRAMQuickTaskMgr" Content="Task Manager" Margin="0,0,0,6" Height="32" HorizontalContentAlignment="Center"/>
+                                            <Button Name="WPFRAMQuickDeviceMgr" Content="Device Manager" Margin="0,0,0,6" Height="32" HorizontalContentAlignment="Center"/>
+                                            <Button Name="WPFRAMQuickExplorer" Content="File Explorer" Margin="0,0,0,6" Height="32" HorizontalContentAlignment="Center"/>
+                                            <Button Name="WPFRAMQuickCMD" Content="Command Prompt" Height="32" HorizontalContentAlignment="Center"/>
+                                        </UniformGrid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Name="WPFRAMDiagnosticsCard" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,8">
+                                    <StackPanel>
                                         <TextBlock FontWeight="Bold" FontSize="16" Foreground="{DynamicResource MainForegroundColor}" Text="Diagnostics"/>
-                                        <TextBlock Margin="0,8,0,12" TextWrapping="Wrap" Foreground="{DynamicResource MainForegroundColor}">
-                                            Reserved for hardware checks, software health tools, and intake diagnostics.
-                                        </TextBlock>
-                                        <Button Name="WPFRAMDiagnosticsScaffold" Content="Open Diagnostics Scaffold" Margin="0,4,0,0" Padding="10" HorizontalAlignment="Stretch" MinHeight="32"/>
+                                        <Button Name="WPFRAMDiagnosticsScaffold" Margin="0,8,0,0" Content="Open Diagnostics" Height="32" HorizontalContentAlignment="Center"/>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Name="WPFRAMBusinessCard" Style="{StaticResource BorderStyle}">
-                                    <StackPanel Margin="12">
+                                <Border Name="WPFRAMBusinessCard" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="6" Padding="10">
+                                    <StackPanel>
                                         <TextBlock FontWeight="Bold" FontSize="16" Foreground="{DynamicResource MainForegroundColor}" Text="Business Tools"/>
-                                        <TextBlock Margin="0,8,0,12" TextWrapping="Wrap" Foreground="{DynamicResource MainForegroundColor}">
-                                            Reserved for client setup bundles, workstation prep, and business service presets.
-                                        </TextBlock>
-                                        <Button Name="WPFRAMBusinessScaffold" Content="Open Business Scaffold" Margin="0,4,0,0" Padding="10" HorizontalAlignment="Stretch" MinHeight="32"/>
+                                        <Button Name="WPFRAMBusinessScaffold" Margin="0,8,0,0" Content="Open Business Tools" Height="32" HorizontalContentAlignment="Center"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
                         </Grid>
 
-                        <Border Grid.Row="2" Style="{StaticResource BorderStyle}" Margin="0,10,0,0">
-                            <StackPanel Margin="10">
-                                <TextBlock FontWeight="Bold" Foreground="{DynamicResource MainForegroundColor}" Text="Scaffold Actions"/>
-                                <WrapPanel Name="WPFRAMActionPanel" Margin="0,10,0,0" ItemHeight="54" ItemWidth="235">
-                                    <Button Name="WPFRAMOpenModuleFolder" Content="Open RAM Module Folder" Margin="5" Width="225" Height="40" MinHeight="40" Padding="12,5"/>
-                                    <Button Name="WPFRAMShowRoadmap" Content="Show RAM Module Roadmap" Margin="5" Width="225" Height="40" MinHeight="40" Padding="12,5"/>
-                                </WrapPanel>
-                            </StackPanel>
-                        </Border>
+                        <Grid Visibility="Collapsed" Height="0" Width="0">
+                            <TextBlock Name="WPFRAMRepairSummaryTicketId" Text="?"/>
+                            <TextBlock Name="WPFRAMRepairSummaryCustomer" Text="?"/>
+                            <TextBlock Name="WPFRAMRepairSummaryPhone" Text="?"/>
+                            <TextBlock Name="WPFRAMRepairSummaryDevice" Text="?"/>
+                            <TextBlock Name="WPFRAMRepairSummaryStatus" Text="Not Started"/>
+                            <TextBlock Name="WPFRAMRepairSummaryChecklist" Text="0/6 completed"/>
+                            <TextBlock Name="WPFRAMRepairSummaryIssue" Text="?"/>
+                            <TextBlock Name="WPFRAMRepairSummaryLastSave" Text="Not saved yet"/>
+                        </Grid>
                     </Grid>
                 </ScrollViewer>
             </TabItem>
@@ -16289,7 +16190,11 @@ $ramRepairButtonNames = @(
     "WPFRAMRepairTuneup",
     "WPFRAMRepairWindowsFix",
     "WPFRAMRepairSaveSession",
-    "WPFRAMRepairClearSession"
+    "WPFRAMRepairClearSession",
+    "WPFRAMRepairMarkComplete",
+    "WPFRAMRepairMarkReadyPickup",
+    "WPFRAMRepairCloseTicket",
+    "WPFRAMGenerateTicketId"
 )
 
 function Get-RAMRepairFieldValue {
@@ -16317,6 +16222,58 @@ function Set-RAMRepairFieldValue {
     }
 }
 
+function Get-RAMTicketStatePath {
+    $appDataPath = Join-Path ([Environment]::GetFolderPath("LocalApplicationData")) "RAM-Tech-Utility"
+    if (-not (Test-Path -LiteralPath $appDataPath)) {
+        New-Item -Path $appDataPath -ItemType Directory -Force | Out-Null
+    }
+
+    return (Join-Path $appDataPath "ticket-sequence.txt")
+}
+
+function New-RAMRepairTicketId {
+    $todayStamp = Get-Date -Format "yyyyMMdd"
+    $statePath = Get-RAMTicketStatePath
+    $lastDate = ""
+    $lastNumber = 0
+
+    if (Test-Path -LiteralPath $statePath) {
+        try {
+            $rawState = (Get-Content -LiteralPath $statePath -ErrorAction Stop | Select-Object -First 1).Trim()
+            if ($rawState -match '^(?<date>\d{8})\|(?<num>\d+)$') {
+                $lastDate = $matches['date']
+                $lastNumber = [int]$matches['num']
+            }
+        }
+        catch {
+            $lastDate = ""
+            $lastNumber = 0
+        }
+    }
+
+    if ($lastDate -eq $todayStamp) {
+        $nextNumber = $lastNumber + 1
+    }
+    else {
+        $nextNumber = 1
+    }
+
+    $stateValue = "{0}|{1}" -f $todayStamp, $nextNumber
+    Set-Content -LiteralPath $statePath -Value $stateValue -Encoding UTF8
+
+    return ("RAM-{0}-{1:D3}" -f $todayStamp, $nextNumber)
+}
+
+function Ensure-RAMRepairTicketId {
+    $ticketId = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairTicketId"
+    if ([string]::IsNullOrWhiteSpace($ticketId)) {
+        $ticketId = New-RAMRepairTicketId
+        Set-RAMRepairFieldValue -ControlName "WPFRAMRepairTicketId" -Value $ticketId
+    }
+
+    return $ticketId
+}
+
 function Get-RAMRepairSelectedStatus {
     if ($sync.WPFRAMRepairStatusCombo -and $sync.WPFRAMRepairStatusCombo.SelectedItem) {
         return $sync.WPFRAMRepairStatusCombo.SelectedItem.Content.ToString()
@@ -16341,6 +16298,20 @@ function Set-RAMRepairStatus {
             Update-RAMRepairSummary
             return
         }
+    }
+}
+
+
+function Set-RAMRepairChecklistValue {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ControlName,
+        [Parameter(Mandatory)]
+        [bool]$Value
+    )
+
+    if ($sync.ContainsKey($ControlName) -and $null -ne $sync[$ControlName]) {
+        $sync[$ControlName].IsChecked = $Value
     }
 }
 
@@ -16393,14 +16364,62 @@ function Get-RAMRepairCheckboxValue {
     return $false
 }
 
+
+
+function Add-RAMRepairActivity {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Message
+    )
+
+    $timestampedMessage = "[{0}] {1}" -f (Get-Date -Format "hh:mm:ss tt"), $Message
+
+    if ($sync.WPFRAMRepairActivityLog -and $null -ne $sync.WPFRAMRepairActivityLog.Text) {
+        if ([string]::IsNullOrWhiteSpace($sync.WPFRAMRepairActivityLog.Text)) {
+            $sync.WPFRAMRepairActivityLog.Text = $timestampedMessage
+        }
+        else {
+            $sync.WPFRAMRepairActivityLog.Text += [Environment]::NewLine + $timestampedMessage
+        }
+
+        $sync.WPFRAMRepairActivityLog.CaretIndex = $sync.WPFRAMRepairActivityLog.Text.Length
+        $sync.WPFRAMRepairActivityLog.ScrollToEnd()
+    }
+}
+
+function Get-RAMRepairChecklistSummary {
+    $checkStates = @(
+        (Get-RAMRepairCheckboxValue -ControlName "WPFRAMRepairChecklistIntake"),
+        (Get-RAMRepairCheckboxValue -ControlName "WPFRAMRepairChecklistBackup"),
+        (Get-RAMRepairCheckboxValue -ControlName "WPFRAMRepairChecklistDiag"),
+        (Get-RAMRepairCheckboxValue -ControlName "WPFRAMRepairChecklistDone"),
+        (Get-RAMRepairCheckboxValue -ControlName "WPFRAMRepairChecklistQC"),
+        (Get-RAMRepairCheckboxValue -ControlName "WPFRAMRepairChecklistPickup")
+    )
+
+    $completedCount = ($checkStates | Where-Object { $_ }).Count
+    return "{0}/6 completed" -f $completedCount
+}
+
 function Update-RAMRepairSummary {
+    $ticketId = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairTicketId"
     $customer = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairCustomer"
+    $phone = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairPhone"
     $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
     $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
     $status = Get-RAMRepairSelectedStatus
+    $checklistSummary = Get-RAMRepairChecklistSummary
+
+    if ($sync.WPFRAMRepairSummaryTicketId) {
+        $sync.WPFRAMRepairSummaryTicketId.Text = if ([string]::IsNullOrWhiteSpace($ticketId)) { "?" } else { $ticketId }
+    }
 
     if ($sync.WPFRAMRepairSummaryCustomer) {
         $sync.WPFRAMRepairSummaryCustomer.Text = if ([string]::IsNullOrWhiteSpace($customer)) { "?" } else { $customer }
+    }
+
+    if ($sync.WPFRAMRepairSummaryPhone) {
+        $sync.WPFRAMRepairSummaryPhone.Text = if ([string]::IsNullOrWhiteSpace($phone)) { "?" } else { $phone }
     }
 
     if ($sync.WPFRAMRepairSummaryDevice) {
@@ -16414,11 +16433,20 @@ function Update-RAMRepairSummary {
     if ($sync.WPFRAMRepairSummaryIssue) {
         $sync.WPFRAMRepairSummaryIssue.Text = if ([string]::IsNullOrWhiteSpace($issue)) { "?" } else { $issue }
     }
+
+    if ($sync.WPFRAMRepairSummaryChecklist) {
+        $sync.WPFRAMRepairSummaryChecklist.Text = $checklistSummary
+    }
+
+    if ($sync.WPFRAMRepairSummaryLastSave -and [string]::IsNullOrWhiteSpace($sync.WPFRAMRepairSummaryLastSave.Text)) {
+        $sync.WPFRAMRepairSummaryLastSave.Text = "Not saved yet"
+    }
 }
 
 function Reset-RAMRepairSession {
     Clear-RAMRepairChecklist
 
+    Set-RAMRepairFieldValue -ControlName "WPFRAMRepairTicketId" -Value ""
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairCustomer" -Value ""
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairPhone" -Value ""
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice" -Value ""
@@ -16430,6 +16458,16 @@ function Reset-RAMRepairSession {
     }
 
     Set-RAMRepairStatus -Status "Not Started"
+
+    if ($sync.WPFRAMRepairSummaryLastSave) {
+        $sync.WPFRAMRepairSummaryLastSave.Text = "Not saved yet"
+    }
+
+    if ($sync.WPFRAMRepairActivityLog) {
+        $sync.WPFRAMRepairActivityLog.Text = ""
+    }
+
+    Add-RAMRepairActivity -Message "Repair session cleared."
     Update-RAMRepairSummary
 }
 
@@ -16438,6 +16476,7 @@ function Save-RAMRepairSession {
         $desktopPath = [Environment]::GetFolderPath("Desktop")
 
         $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+        $ticketId = Ensure-RAMRepairTicketId
         $customerSlug = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairCustomer"
         if ([string]::IsNullOrWhiteSpace($customerSlug)) {
             $customerSlug = "walk-in"
@@ -16447,7 +16486,12 @@ function Save-RAMRepairSession {
             $customerSlug = "walk-in"
         }
 
-        $savePath = Join-Path $desktopPath ("repair-session-{0}-{1}.txt" -f $customerSlug.ToLower(), $timestamp)
+        $ticketSlug = ($ticketId -replace '[^a-zA-Z0-9\-]', '').ToLower()
+        if ([string]::IsNullOrWhiteSpace($ticketSlug)) {
+            $ticketSlug = "no-ticket"
+        }
+
+        $savePath = Join-Path $desktopPath ("repair-session-{0}-{1}-{2}.txt" -f $ticketSlug, $customerSlug.ToLower(), $timestamp)
 
         $customer = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairCustomer"
         $phone = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairPhone"
@@ -16462,6 +16506,7 @@ function Save-RAMRepairSession {
             "Repair Session",
             "Saved: $(Get-Date -Format 'yyyy-MM-dd hh:mm:ss tt')",
             "",
+            "Ticket / Invoice #: $ticketId",
             "Customer: $customer",
             "Phone / Contact: $phone",
             "Device: $device",
@@ -16482,6 +16527,12 @@ function Save-RAMRepairSession {
         ) -join [Environment]::NewLine
 
         Set-Content -LiteralPath $savePath -Value $sessionText -Encoding UTF8
+
+        if ($sync.WPFRAMRepairSummaryLastSave) {
+            $sync.WPFRAMRepairSummaryLastSave.Text = $savePath
+        }
+
+        Add-RAMRepairActivity -Message ("Repair session saved to {0}" -f $savePath)
         Update-RAMRepairSummary
 
         [System.Windows.MessageBox]::Show(
@@ -16501,8 +16552,20 @@ function Save-RAMRepairSession {
     }
 }
 
+if ($sync.WPFRAMRepairTicketId) {
+    $sync.WPFRAMRepairTicketId.Add_TextChanged({
+        Update-RAMRepairSummary
+    })
+}
+
 if ($sync.WPFRAMRepairCustomer) {
     $sync.WPFRAMRepairCustomer.Add_TextChanged({
+        Update-RAMRepairSummary
+    })
+}
+
+if ($sync.WPFRAMRepairPhone) {
+    $sync.WPFRAMRepairPhone.Add_TextChanged({
         Update-RAMRepairSummary
     })
 }
@@ -16525,6 +16588,21 @@ if ($sync.WPFRAMRepairStatusCombo) {
     })
 }
 
+@(
+    "WPFRAMRepairChecklistIntake",
+    "WPFRAMRepairChecklistBackup",
+    "WPFRAMRepairChecklistDiag",
+    "WPFRAMRepairChecklistDone",
+    "WPFRAMRepairChecklistQC",
+    "WPFRAMRepairChecklistPickup"
+) | ForEach-Object {
+    if ($sync[$_]) {
+        $sync[$_].Add_Click({
+            Update-RAMRepairSummary
+        })
+    }
+}
+
 if ($sync.WPFRAMRepairNewIntake) {
     $sync.WPFRAMRepairNewIntake.Add_Click({
         Clear-RAMRepairChecklist
@@ -16540,6 +16618,7 @@ if ($sync.WPFRAMRepairNewIntake) {
         }
 
         $openedAt = Get-Date -Format "yyyy-MM-dd hh:mm tt"
+        $ticketId = Ensure-RAMRepairTicketId
         $customer = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairCustomer"
         $phone = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairPhone"
         $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
@@ -16548,6 +16627,7 @@ if ($sync.WPFRAMRepairNewIntake) {
 
         $sync.WPFRAMRepairNotes.Text = @"
 [NEW REPAIR INTAKE]
+Ticket / Invoice #: $ticketId
 Repair opened: $openedAt
 Customer: $customer
 Phone / Contact: $phone
@@ -16560,6 +16640,16 @@ Initial Notes:
         $sync.WPFRAMRepairNotes.CaretIndex = $sync.WPFRAMRepairNotes.Text.Length
         $sync.WPFRAMRepairNotes.ScrollToEnd()
         $sync.WPFRAMRepairNotes.Focus()
+        Add-RAMRepairActivity -Message "New intake started."
+        Update-RAMRepairSummary
+    })
+}
+
+if ($sync.WPFRAMGenerateTicketId) {
+    $sync.WPFRAMGenerateTicketId.Add_Click({
+        $ticketId = New-RAMRepairTicketId
+        Set-RAMRepairFieldValue -ControlName "WPFRAMRepairTicketId" -Value $ticketId
+        Add-RAMRepairActivity -Message ("Generated ticket number {0}." -f $ticketId)
         Update-RAMRepairSummary
     })
 }
@@ -16575,6 +16665,7 @@ if ($sync.WPFRAMRepairMalware) {
 - Tools used:
 - Outcome:
 "@.Trim()
+        Add-RAMRepairActivity -Message "Malware cleanup template added."
         Update-RAMRepairSummary
     })
 }
@@ -16591,6 +16682,7 @@ if ($sync.WPFRAMRepairTuneup) {
 - RAM usage:
 - Result:
 "@.Trim()
+        Add-RAMRepairActivity -Message "Performance tune-up template added."
         Update-RAMRepairSummary
     })
 }
@@ -16607,6 +16699,7 @@ if ($sync.WPFRAMRepairWindowsFix) {
 - DISM run:
 - Result:
 "@.Trim()
+        Add-RAMRepairActivity -Message "Windows repair template added."
         Update-RAMRepairSummary
     })
 }
@@ -16617,11 +16710,85 @@ if ($sync.WPFRAMRepairSaveSession) {
     })
 }
 
+if ($sync.WPFRAMRepairMarkComplete) {
+    $sync.WPFRAMRepairMarkComplete.Add_Click({
+        Set-RAMRepairChecklistValue -ControlName "WPFRAMRepairChecklistDone" -Value $true
+        Set-RAMRepairStatus -Status "Repair In Progress"
+        Append-RAMRepairNote -Text @"
+[REPAIR COMPLETED]
+Completed: $(Get-Date -Format "yyyy-MM-dd hh:mm tt")
+Repair work completed. Ready for QC / final review.
+"@.Trim()
+        Add-RAMRepairActivity -Message "Repair marked complete."
+        Update-RAMRepairSummary
+    })
+}
+
+if ($sync.WPFRAMRepairMarkReadyPickup) {
+    $sync.WPFRAMRepairMarkReadyPickup.Add_Click({
+        Set-RAMRepairChecklistValue -ControlName "WPFRAMRepairChecklistDone" -Value $true
+        Set-RAMRepairChecklistValue -ControlName "WPFRAMRepairChecklistQC" -Value $true
+        Set-RAMRepairChecklistValue -ControlName "WPFRAMRepairChecklistPickup" -Value $true
+        Set-RAMRepairStatus -Status "Ready for Pickup"
+        Append-RAMRepairNote -Text @"
+[READY FOR PICKUP]
+Updated: $(Get-Date -Format "yyyy-MM-dd hh:mm tt")
+Repair completed, QC passed, and device is ready for pickup.
+"@.Trim()
+        Add-RAMRepairActivity -Message "Repair marked ready for pickup."
+        Update-RAMRepairSummary
+    })
+}
+
+if ($sync.WPFRAMRepairCloseTicket) {
+    $sync.WPFRAMRepairCloseTicket.Add_Click({
+        Set-RAMRepairStatus -Status "Closed"
+        Append-RAMRepairNote -Text @"
+[TICKET CLOSED]
+Closed: $(Get-Date -Format "yyyy-MM-dd hh:mm tt")
+Ticket closed.
+"@.Trim()
+        Add-RAMRepairActivity -Message "Ticket closed."
+        Update-RAMRepairSummary
+    })
+}
+
 if ($sync.WPFRAMRepairClearSession) {
     $sync.WPFRAMRepairClearSession.Add_Click({
         Reset-RAMRepairSession
     })
 }
+
+
+if ($sync.WPFRAMQuickTaskMgr) {
+    $sync.WPFRAMQuickTaskMgr.Add_Click({
+        Start-Process taskmgr.exe
+        Add-RAMRepairActivity -Message "Opened Task Manager."
+    })
+}
+
+if ($sync.WPFRAMQuickDeviceMgr) {
+    $sync.WPFRAMQuickDeviceMgr.Add_Click({
+        Start-Process devmgmt.msc
+        Add-RAMRepairActivity -Message "Opened Device Manager."
+    })
+}
+
+if ($sync.WPFRAMQuickExplorer) {
+    $sync.WPFRAMQuickExplorer.Add_Click({
+        Start-Process explorer.exe
+        Add-RAMRepairActivity -Message "Opened File Explorer."
+    })
+}
+
+if ($sync.WPFRAMQuickCMD) {
+    $sync.WPFRAMQuickCMD.Add_Click({
+        Start-Process cmd.exe
+        Add-RAMRepairActivity -Message "Opened Command Prompt."
+    })
+}
+
+Update-RAMRepairSummary
 
 # Persist Package Manager preference across RAM Tech Utility restarts
 $sync.ChocoRadioButton.Add_Checked({
