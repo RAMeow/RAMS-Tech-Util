@@ -15419,12 +15419,28 @@ $inputXML = @'
                                                 </Grid>
 
                                                 <Grid Grid.Row="3" Margin="0,0,0,0">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="84"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Issue"/>
-                                                    <TextBox Name="WPFRAMRepairIssue" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+
+                                                    <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="84"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Reported"/>
+                                                        <TextBox Name="WPFRAMRepairIssue" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
+                                                    </Grid>
+
+                                                    <Grid Grid.Row="1" Margin="0,0,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="84"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Findings"/>
+                                                        <TextBox Name="WPFRAMRepairInitialFindings" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
+                                                    </Grid>
                                                 </Grid>
                                             </Grid>
                                         </StackPanel>
@@ -15547,6 +15563,7 @@ $inputXML = @'
                             <TextBlock Name="WPFRAMRepairSummaryStatus" Text="Not Started"/>
                             <TextBlock Name="WPFRAMRepairSummaryChecklist" Text="0/6 completed"/>
                             <TextBlock Name="WPFRAMRepairSummaryIssue" Text="?"/>
+                            <TextBlock Name="WPFRAMRepairSummaryInitialFindings" Text="?"/>
                             <TextBlock Name="WPFRAMRepairSummaryLastSave" Text="Not saved yet"/>
                         </Grid>
                     </Grid>
@@ -16433,6 +16450,7 @@ function Update-RAMRepairSummary {
     $phone = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairPhone"
     $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
     $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
+    $initialFindings = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings"
     $status = Get-RAMRepairSelectedStatus
     $checklistSummary = Get-RAMRepairChecklistSummary
 
@@ -16460,6 +16478,10 @@ function Update-RAMRepairSummary {
         $sync.WPFRAMRepairSummaryIssue.Text = if ([string]::IsNullOrWhiteSpace($issue)) { "?" } else { $issue }
     }
 
+    if ($sync.WPFRAMRepairSummaryInitialFindings) {
+        $sync.WPFRAMRepairSummaryInitialFindings.Text = if ([string]::IsNullOrWhiteSpace($initialFindings)) { "?" } else { $initialFindings }
+    }
+
     if ($sync.WPFRAMRepairSummaryChecklist) {
         $sync.WPFRAMRepairSummaryChecklist.Text = $checklistSummary
     }
@@ -16478,6 +16500,7 @@ function Reset-RAMRepairSession {
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice" -Value ""
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories" -Value ""
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue" -Value ""
+    Set-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings" -Value ""
 
     if ($sync.WPFRAMRepairNotes) {
         $sync.WPFRAMRepairNotes.Text = ""
@@ -16524,6 +16547,7 @@ function Save-RAMRepairSession {
         $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
         $accessories = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories"
         $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
+        $initialFindings = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings"
         $status = Get-RAMRepairSelectedStatus
         $notes = if ($sync.WPFRAMRepairNotes) { $sync.WPFRAMRepairNotes.Text } else { "" }
 
@@ -16538,6 +16562,7 @@ function Save-RAMRepairSession {
             "Device: $device",
             "Accessories: $accessories",
             "Issue Reported: $issue",
+            "Initial Findings: $initialFindings",
             "Status: $status",
             "",
             "Checklist:",
@@ -16608,6 +16633,12 @@ if ($sync.WPFRAMRepairIssue) {
     })
 }
 
+if ($sync.WPFRAMRepairInitialFindings) {
+    $sync.WPFRAMRepairInitialFindings.Add_TextChanged({
+        Update-RAMRepairSummary
+    })
+}
+
 if ($sync.WPFRAMRepairStatusCombo) {
     $sync.WPFRAMRepairStatusCombo.Add_SelectionChanged({
         Update-RAMRepairSummary
@@ -16650,6 +16681,7 @@ if ($sync.WPFRAMRepairNewIntake) {
         $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
         $accessories = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories"
         $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
+        $initialFindings = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings"
 
         $sync.WPFRAMRepairNotes.Text = @"
 [NEW REPAIR INTAKE]
@@ -16660,6 +16692,7 @@ Phone / Contact: $phone
 Device: $device
 Accessories Received: $accessories
 Issue Reported: $issue
+Initial Findings: $initialFindings
 Initial Notes:
 "@.Trim()
 
