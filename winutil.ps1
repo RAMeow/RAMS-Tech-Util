@@ -9,7 +9,8 @@ param (
     [string]$Config,
     [switch]$Run,
     [switch]$Noui,
-    [switch]$Offline
+    [switch]$Offline,
+    [switch]$ClearCachedData
 )
 
 if ($Config) {
@@ -29,6 +30,11 @@ if ($Noui) {
 $PARAM_OFFLINE = $false
 if ($Offline) {
     $PARAM_OFFLINE = $true
+}
+
+$PARAM_CLEARCACHEDDATA = $false
+if ($ClearCachedData) {
+    $PARAM_CLEARCACHEDDATA = $true
 }
 
 if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -69,6 +75,44 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName System.Windows.Forms
 
+
+function Clear-RAMLocalCache {
+    param(
+        [string]$CacheRoot,
+        [switch]$CloseAfterClear
+    )
+
+    if ([string]::IsNullOrWhiteSpace($CacheRoot)) { return $false }
+
+    try {
+        if (Test-Path $CacheRoot) {
+            Remove-Item -Path $CacheRoot -Recurse -Force -ErrorAction SilentlyContinue
+        }
+
+        [System.Windows.MessageBox]::Show(
+            "Cached local RAM Tech Utility data has been cleared.`n`nReopen from the website launcher or the newest package to pull the latest version.",
+            "RAM Tech Utility",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        ) | Out-Null
+
+        if ($CloseAfterClear -and $sync.ContainsKey('Form') -and $sync['Form']) {
+            $sync['Form'].Close()
+        }
+
+        return $true
+    }
+    catch {
+        [System.Windows.MessageBox]::Show(
+            "Could not clear cached data.`n`n$($_.Exception.Message)",
+            "RAM Tech Utility",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Error
+        ) | Out-Null
+        return $false
+    }
+}
+
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
 $sync.PSScriptRoot = $PSScriptRoot
@@ -82,6 +126,7 @@ $sync.selectedTweaks = [System.Collections.Generic.List[string]]::new()
 $sync.selectedToggles = [System.Collections.Generic.List[string]]::new()
 $sync.selectedFeatures = [System.Collections.Generic.List[string]]::new()
 $sync.currentTab = "Install"
+$sync.cacheRoot = Join-Path $env:LOCALAPPDATA 'RAM-Tech-Utility'
 $sync.selectedAppsStackPanel
 $sync.selectedAppsPopup
 
@@ -89,6 +134,11 @@ $dateTime = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 
 # Set the path for the RAM Tech Utility directory
 $winutildir = "$env:LocalAppData\RAM-Tech-Utility"
+if ($PARAM_CLEARCACHEDDATA) {
+    Clear-RAMLocalCache -CacheRoot $sync.cacheRoot | Out-Null
+    exit
+}
+
 New-Item $winutildir -ItemType Directory -Force | Out-Null
 
 $logdir = "$winutildir\logs"
@@ -14810,6 +14860,12 @@ $inputXML = @'
                                 </MenuItem.ToolTip>
                             </MenuItem>
                             <Separator/>
+                            <MenuItem FontSize="{DynamicResource ButtonFontSize}" Header="Clear Local Cache" Name="ClearLocalCacheMenuItem" Foreground="{DynamicResource MainForegroundColor}">
+                                <MenuItem.ToolTip>
+                                    <ToolTip Content="Remove cached local install data so the next launch pulls the newest version."/>
+                                </MenuItem.ToolTip>
+                            </MenuItem>
+                            <Separator/>
                             <MenuItem FontSize="{DynamicResource ButtonFontSize}" Header="About" Name="AboutMenuItem" Foreground="{DynamicResource MainForegroundColor}"/>
                             <MenuItem FontSize="{DynamicResource ButtonFontSize}" Header="Project Files" Name="DocumentationMenuItem" Foreground="{DynamicResource MainForegroundColor}"/>
                             <MenuItem FontSize="{DynamicResource ButtonFontSize}" Header="Credits" Name="SponsorMenuItem" Foreground="{DynamicResource MainForegroundColor}"/>
@@ -15419,28 +15475,12 @@ $inputXML = @'
                                                 </Grid>
 
                                                 <Grid Grid.Row="3" Margin="0,0,0,0">
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                    </Grid.RowDefinitions>
-
-                                                    <Grid Grid.Row="0" Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="84"/>
-                                                            <ColumnDefinition Width="*"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Reported"/>
-                                                        <TextBox Name="WPFRAMRepairIssue" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
-                                                    </Grid>
-
-                                                    <Grid Grid.Row="1" Margin="0,0,0,0">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="84"/>
-                                                            <ColumnDefinition Width="*"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Findings"/>
-                                                        <TextBox Name="WPFRAMRepairInitialFindings" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
-                                                    </Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="84"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Top" Foreground="{DynamicResource MainForegroundColor}" Text="Issue"/>
+                                                    <TextBox Name="WPFRAMRepairIssue" Grid.Column="1" Height="52" Padding="6" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="{DynamicResource MainBackgroundColor}" Foreground="{DynamicResource MainForegroundColor}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"/>
                                                 </Grid>
                                             </Grid>
                                         </StackPanel>
@@ -15563,7 +15603,6 @@ $inputXML = @'
                             <TextBlock Name="WPFRAMRepairSummaryStatus" Text="Not Started"/>
                             <TextBlock Name="WPFRAMRepairSummaryChecklist" Text="0/6 completed"/>
                             <TextBlock Name="WPFRAMRepairSummaryIssue" Text="?"/>
-                            <TextBlock Name="WPFRAMRepairSummaryInitialFindings" Text="?"/>
                             <TextBlock Name="WPFRAMRepairSummaryLastSave" Text="Not saved yet"/>
                         </Grid>
                     </Grid>
@@ -16450,7 +16489,6 @@ function Update-RAMRepairSummary {
     $phone = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairPhone"
     $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
     $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
-    $initialFindings = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings"
     $status = Get-RAMRepairSelectedStatus
     $checklistSummary = Get-RAMRepairChecklistSummary
 
@@ -16478,10 +16516,6 @@ function Update-RAMRepairSummary {
         $sync.WPFRAMRepairSummaryIssue.Text = if ([string]::IsNullOrWhiteSpace($issue)) { "?" } else { $issue }
     }
 
-    if ($sync.WPFRAMRepairSummaryInitialFindings) {
-        $sync.WPFRAMRepairSummaryInitialFindings.Text = if ([string]::IsNullOrWhiteSpace($initialFindings)) { "?" } else { $initialFindings }
-    }
-
     if ($sync.WPFRAMRepairSummaryChecklist) {
         $sync.WPFRAMRepairSummaryChecklist.Text = $checklistSummary
     }
@@ -16500,7 +16534,6 @@ function Reset-RAMRepairSession {
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice" -Value ""
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories" -Value ""
     Set-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue" -Value ""
-    Set-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings" -Value ""
 
     if ($sync.WPFRAMRepairNotes) {
         $sync.WPFRAMRepairNotes.Text = ""
@@ -16547,7 +16580,6 @@ function Save-RAMRepairSession {
         $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
         $accessories = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories"
         $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
-        $initialFindings = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings"
         $status = Get-RAMRepairSelectedStatus
         $notes = if ($sync.WPFRAMRepairNotes) { $sync.WPFRAMRepairNotes.Text } else { "" }
 
@@ -16562,7 +16594,6 @@ function Save-RAMRepairSession {
             "Device: $device",
             "Accessories: $accessories",
             "Issue Reported: $issue",
-            "Initial Findings: $initialFindings",
             "Status: $status",
             "",
             "Checklist:",
@@ -16633,12 +16664,6 @@ if ($sync.WPFRAMRepairIssue) {
     })
 }
 
-if ($sync.WPFRAMRepairInitialFindings) {
-    $sync.WPFRAMRepairInitialFindings.Add_TextChanged({
-        Update-RAMRepairSummary
-    })
-}
-
 if ($sync.WPFRAMRepairStatusCombo) {
     $sync.WPFRAMRepairStatusCombo.Add_SelectionChanged({
         Update-RAMRepairSummary
@@ -16681,7 +16706,6 @@ if ($sync.WPFRAMRepairNewIntake) {
         $device = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairDevice"
         $accessories = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairAccessories"
         $issue = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairIssue"
-        $initialFindings = Get-RAMRepairFieldValue -ControlName "WPFRAMRepairInitialFindings"
 
         $sync.WPFRAMRepairNotes.Text = @"
 [NEW REPAIR INTAKE]
@@ -16692,7 +16716,6 @@ Phone / Contact: $phone
 Device: $device
 Accessories Received: $accessories
 Issue Reported: $issue
-Initial Findings: $initialFindings
 Initial Notes:
 "@.Trim()
 
